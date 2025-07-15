@@ -1,3 +1,10 @@
+use crate::piece::bishop::Bishop;
+use crate::piece::king::King;
+use crate::piece::knight::Knight;
+use crate::piece::pawn::Pawn;
+use crate::piece::queen::Queen;
+use crate::piece::rook::Rook;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
@@ -114,13 +121,27 @@ impl Square {
     }
 }
 
+pub trait ChessBoard {
+    fn new() -> Self;
+    fn print_board(&self);
+    fn get_square(&self, coordinate: Coordinate) -> Option<&Square>;
+    fn is_king_in_check(&self, color: Color) -> bool;
+    fn legal_moves(&self, piece_to_move: Square) -> Result<Vec<Square>, ()>;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     pub squares: [Square; 64],
     pub previous_move: Option<(Square, Square)>,
 }
+impl Default for Board {
+    fn default() -> Self {
+        Board::new()
+    }
+}
 
-impl Board {
-    pub fn new() -> Self {
+impl ChessBoard for Board {
+    fn new() -> Self {
         let mut squares = [Square {
             piece: None,
             coordinate: Coordinate::A(1),
@@ -166,12 +187,12 @@ impl Board {
             }
         }
         Board {
-            squares: squares,
+            squares,
             previous_move: None,
         }
     }
 
-    pub fn print_board(&self) {
+    fn print_board(&self) {
         for rank in 0..8 {
             for file in 0..8 {
                 let idx = (rank) * 8 + (file);
@@ -196,7 +217,7 @@ impl Board {
             println!();
         }
     }
-    pub fn get_square(&self, coordinate: Coordinate) -> Option<&Square> {
+    fn get_square(&self, coordinate: Coordinate) -> Option<&Square> {
         let index = match coordinate {
             Coordinate::A(rank) => (rank * 8) as usize,
             Coordinate::B(rank) => (rank * 8 + 1) as usize,
@@ -211,39 +232,23 @@ impl Board {
         self.squares.get(index)
     }
 
-    pub fn is_king_in_check(&self, color: Color) -> bool {
+    fn is_king_in_check(&self, _color: Color) -> bool {
         // Placeholder for check logic
         // This function should determine if the king of the given color is in check
         false
     }
 
-    pub fn legal_move(&self, square: Square) -> Result<Vec<Square>, ()> {
-        match square.get_piece() {
+    fn legal_moves(&self, piece_to_move: Square) -> Result<Vec<Square>, ()> {
+        match piece_to_move.get_piece() {
             Some(piece) => {
-                let mut available_moves = Vec::new();
-                match piece {
-                    Piece::Pawn(_) => {
-                        todo!("Pawn moves not implemented yet");
-                    }
-                    Piece::Knight(_) => {
-                        todo!("Knight moves not implemented yet");
-                    }
-                    Piece::Bishop(_) => {
-                        todo!("Bishop moves not implemented yet");
-                    }
-                    Piece::Rook(_) => {
-                        todo!("Rook moves not implemented yet");
-                    }
-                    Piece::Queen(_) => {
-                        todo!("Queen moves not implemented yet");
-                    }
-                    Piece::King(_) => {
-                        todo!("King moves not implemented yet");
-                    }
-                }
-                // Here you would implement the logic to determine available moves for the piece
-                // For now, we will just return an empty vector
-
+                let available_moves = match piece {
+                    Piece::Pawn(_) => self.pawn_move(piece_to_move),
+                    Piece::Knight(_) => self.knight_move(piece_to_move),
+                    Piece::Bishop(_) => self.bishop_move(piece_to_move),
+                    Piece::Rook(_) => self.rook_move(piece_to_move),
+                    Piece::Queen(_) => self.queen_moves(piece_to_move),
+                    Piece::King(_) => self.king_move(piece_to_move),
+                };
                 Ok(available_moves)
             }
             None => Err(()),

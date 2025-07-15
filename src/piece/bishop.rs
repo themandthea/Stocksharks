@@ -1,4 +1,5 @@
-use crate::chess::{Board, Color, Coordinate, Piece, Square};
+use crate::chess::ChessBoard;
+use crate::chess::{Board, Color, Coordinate, Piece, Square}; // Add this import
 
 pub trait Bishop {
     fn bishop_move(&self, square: Square) -> Vec<Square>;
@@ -7,98 +8,82 @@ pub trait Bishop {
 impl Bishop for Board {
     fn bishop_move(&self, square: Square) -> Vec<Square> {
         let mut moves: Vec<Square> = vec![];
-        match square.get_piece() {
-            Some(Piece::Bishop(color)) => {
-                let column = square.get_column().unwrap();
-                let line = square.get_line().unwrap();
+        if let Some(Piece::Bishop(color)) = square.get_piece() {
+            let column = square.get_column().unwrap();
+            let line = square.get_line().unwrap();
 
-                // Diagonal moves
-                for i in 1..8 {
-                    if let Some(square_up_left) =
-                        self.get_square(Coordinate::new(column - i, line + i))
-                    {
-                        if square_up_left.available() {
-                            let square_up_left =
-                                Square::new(Some(Piece::Bishop(*color)), square_up_left.coordinate);
-                            moves.push(square_up_left);
-                        } else if square_up_left.occupied_by_oponent(&Color::White) {
-                            let square_up_left =
-                                Square::new(Some(Piece::Bishop(*color)), square_up_left.coordinate);
-                            moves.push(square_up_left);
-                            break;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                for i in 1..8 {
-                    if let Some(square_up_right) =
-                        self.get_square(Coordinate::new(column + i, line + i))
-                    {
-                        if square_up_right.available() {
-                            let square_up_right = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_up_right.coordinate,
-                            );
-                            moves.push(square_up_right);
-                        } else if square_up_right.occupied_by_oponent(&Color::White) {
-                            let square_up_right = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_up_right.coordinate,
-                            );
-                            moves.push(square_up_right);
-                            break;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                for i in 1..8 {
-                    if let Some(square_down_left) =
-                        self.get_square(Coordinate::new(column - i, line - i))
-                    {
-                        if square_down_left.available() {
-                            let square_down_left = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_down_left.coordinate,
-                            );
-                            moves.push(square_down_left);
-                        } else if square_down_left.occupied_by_oponent(&Color::White) {
-                            let square_down_left = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_down_left.coordinate,
-                            );
-                            moves.push(square_down_left);
-                            break;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                for i in 1..8 {
-                    if let Some(square_down_right) =
-                        self.get_square(Coordinate::new(column + i, line - i))
-                    {
-                        if square_down_right.available() {
-                            let square_down_right = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_down_right.coordinate,
-                            );
-                            moves.push(square_down_right);
-                        } else if square_down_right.occupied_by_oponent(color) {
-                            let square_down_right = Square::new(
-                                Some(Piece::Bishop(*color)),
-                                square_down_right.coordinate,
-                            );
-                            moves.push(square_down_right);
-                            break;
-                        } else {
-                            break;
-                        }
+            // Diagonal moves
+            for i in 1..8 {
+                if let Some(square_up_left) = self.get_square(Coordinate::new(column - i, line + i))
+                {
+                    if square_up_left.available() {
+                        let square_up_left =
+                            Square::new(Some(Piece::Bishop(*color)), square_up_left.coordinate);
+                        moves.push(square_up_left);
+                    } else if square_up_left.occupied_by_oponent(&Color::White) {
+                        let square_up_left =
+                            Square::new(Some(Piece::Bishop(*color)), square_up_left.coordinate);
+                        moves.push(square_up_left);
+                        break;
+                    } else {
+                        break;
                     }
                 }
             }
-            _ => {}
+            for i in 1..8 {
+                if let Some(square_up_right) =
+                    self.get_square(Coordinate::new(column + i, line + i))
+                {
+                    if square_up_right.available() {
+                        let square_up_right =
+                            Square::new(Some(Piece::Bishop(*color)), square_up_right.coordinate);
+                        moves.push(square_up_right);
+                    } else if square_up_right.occupied_by_oponent(&Color::White) {
+                        let square_up_right =
+                            Square::new(Some(Piece::Bishop(*color)), square_up_right.coordinate);
+                        moves.push(square_up_right);
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            for i in 1..8 {
+                if let Some(square_down_left) =
+                    self.get_square(Coordinate::new(column - i, line - i))
+                {
+                    if square_down_left.available() {
+                        let square_down_left =
+                            Square::new(Some(Piece::Bishop(*color)), square_down_left.coordinate);
+                        moves.push(square_down_left);
+                    } else if square_down_left.occupied_by_oponent(&Color::White) {
+                        let square_down_left =
+                            Square::new(Some(Piece::Bishop(*color)), square_down_left.coordinate);
+                        moves.push(square_down_left);
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            for i in 1..8 {
+                if let Some(square_down_right) =
+                    self.get_square(Coordinate::new(column + i, line - i))
+                {
+                    if square_down_right.available() {
+                        let square_down_right =
+                            Square::new(Some(Piece::Bishop(*color)), square_down_right.coordinate);
+                        moves.push(square_down_right);
+                    } else if square_down_right.occupied_by_oponent(color) {
+                        let square_down_right =
+                            Square::new(Some(Piece::Bishop(*color)), square_down_right.coordinate);
+                        moves.push(square_down_right);
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
         moves
     }
