@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::piece::bishop::Bishop;
 use crate::piece::king::King;
 use crate::piece::knight::Knight;
@@ -47,6 +48,19 @@ pub enum Coordinate {
     Out,
 }
 impl Coordinate {
+    pub fn get_index(&self) -> Option<usize> {
+        match self {
+            Coordinate::A(rank) => Some((rank * 8) as usize),
+            Coordinate::B(rank) => Some((rank * 8 + 1) as usize),
+            Coordinate::C(rank) => Some((rank * 8 + 2) as usize),
+            Coordinate::D(rank) => Some((rank * 8 + 3) as usize),
+            Coordinate::E(rank) => Some((rank * 8 + 4) as usize),
+            Coordinate::F(rank) => Some((rank * 8 + 5) as usize),
+            Coordinate::G(rank) => Some((rank * 8 + 6) as usize),
+            Coordinate::H(rank) => Some((rank * 8 + 7) as usize),
+            Coordinate::Out => None,
+        }
+    }
     pub fn new(file: u8, rank: u8) -> Self {
         match file {
             0 => Coordinate::A(rank),
@@ -121,12 +135,25 @@ impl Square {
     }
 }
 
+impl Display for Square {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(piece) = &self.piece {
+            write!(f, "{:?} at {:?}", piece, self.coordinate)
+        } else {
+            write!(f, "Empty square at {:?}", self.coordinate)
+        }
+    }
+}
+
 pub trait ChessBoard {
     fn new() -> Self;
     fn print_board(&self);
     fn get_square(&self, coordinate: Coordinate) -> Option<&Square>;
     fn is_king_in_check(&self, color: Color) -> bool;
-    fn legal_moves(&self, piece_to_move: Square) -> Result<Vec<Square>, ()>;
+    fn legal_moves(&self, piece_to_move: &Square) -> Result<Vec<Square>, ()>;
+    fn set_piece(&mut self, square: Coordinate, piece: Option<Piece>) -> Result<(), ()>;
+    fn set_previous_move(&mut self, from: Square, to: Square)-> Result<(), ()>;
+    fn empty() -> Self;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -141,6 +168,32 @@ impl Default for Board {
 }
 
 impl ChessBoard for Board {
+    fn empty() -> Self {
+        let mut squares = [Square {
+            piece: None,
+            coordinate: Coordinate::A(1),
+        }; 64];
+        for i in 0..8 {
+            for j in 0..8 {
+                let coordinate = match j {
+                    0 => Coordinate::A(i),
+                    1 => Coordinate::B(i),
+                    2 => Coordinate::C(i),
+                    3 => Coordinate::D(i),
+                    4 => Coordinate::E(i),
+                    5 => Coordinate::F(i),
+                    6 => Coordinate::G(i),
+                    7 => Coordinate::H(i),
+                    _ => panic!("Invalid file"),
+                };
+                squares[(i * 8 + j) as usize] = Square::new(None, coordinate);
+            }
+        }
+        Board {
+            squares,
+            previous_move: None,
+        }
+    }
     fn new() -> Self {
         let mut squares = [Square {
             piece: None,
@@ -191,9 +244,13 @@ impl ChessBoard for Board {
             previous_move: None,
         }
     }
+    fn set_previous_move(&mut self, from: Square, to: Square)-> Result<(), ()> {
+        self.previous_move = Some((from, to));
+        Ok(())
+    }
 
     fn print_board(&self) {
-        for rank in 0..8 {
+        for rank in (0..8).rev() {
             for file in 0..8 {
                 let idx = (rank) * 8 + (file);
                 let square = &self.squares[idx];
@@ -238,7 +295,7 @@ impl ChessBoard for Board {
         false
     }
 
-    fn legal_moves(&self, piece_to_move: Square) -> Result<Vec<Square>, ()> {
+    fn legal_moves(&self, piece_to_move: &Square) -> Result<Vec<Square>, ()> {
         match piece_to_move.get_piece() {
             Some(piece) => {
                 let available_moves = match piece {
@@ -252,6 +309,24 @@ impl ChessBoard for Board {
                 Ok(available_moves)
             }
             None => Err(()),
+        }
+    }
+
+    fn set_piece(&mut self, square: Coordinate, piece: Option<Piece>) -> Result<(), ()> {
+        let index = square.get_index().ok_or(())?;
+        if index < self.squares.len() {
+            if piece .is_none() {
+                self.squares[index].set_piece(None);
+            } else if let Some(p) = piece {
+                if p.color() == Color::White || p.color() == Color::Black {
+                    self.squares[index].set_piece(piece);
+                } else {
+                    return Err(());
+                }
+            }
+            Ok(())
+        } else {
+            Err(())
         }
     }
 }

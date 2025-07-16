@@ -1,11 +1,11 @@
-use crate::chess::{Board, Coordinate, Piece, Square};
 use crate::chess::ChessBoard;
+use crate::chess::{Board, Coordinate, Piece, Square};
 pub trait Knight {
-    fn knight_move(&self, square: Square) -> Vec<Square>;
+    fn knight_move(&self, square: &Square) -> Vec<Square>;
 }
 
 impl Knight for Board {
-    fn knight_move(&self, square: Square) -> Vec<Square> {
+    fn knight_move(&self, square: &Square) -> Vec<Square> {
         if let Some(Piece::Knight(color)) = square.get_piece() {
             // Knight moves logic
             let mut moves = Vec::new();
@@ -31,11 +31,13 @@ impl Knight for Board {
                     (square.get_column().unwrap() as i8 + dy) as u8,
                     (square.get_line().unwrap() as i8 + dx) as u8,
                 );
-                let new_square = Square::new(
-                    Some(Piece::Knight(*color)),
-                    new_coordinate,
-                );
-                if self.get_square(new_coordinate).unwrap().available() || self.get_square(new_coordinate).unwrap().occupied_by_oponent(color) {
+                let new_square = Square::new(Some(Piece::Knight(*color)), new_coordinate);
+                if self.get_square(new_coordinate).unwrap().available()
+                    || self
+                        .get_square(new_coordinate)
+                        .unwrap()
+                        .occupied_by_oponent(color)
+                {
                     moves.push(new_square);
                 }
             }
