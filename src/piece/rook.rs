@@ -97,6 +97,16 @@ impl Rook for Board {
                 }
             }
         }
+        
+        // Filtrer les mouvements qui mettent le roi en échec
+        if let Some(piece) = square.get_piece() {
+            let from_coord = square.coordinate;
+            
+            available_moves.retain(|move_square| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
+        }
+        
         available_moves
     }
 }

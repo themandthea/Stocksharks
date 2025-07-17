@@ -1,5 +1,5 @@
 use crate::chess::ChessBoard;
-use crate::chess::{Board, Color, Coordinate, Piece, Square}; // Add this import
+use crate::chess::{Board, Coordinate, Piece, Square}; // Add this import
 use std::cmp::min;
 
 pub trait Bishop {
@@ -86,6 +86,16 @@ impl Bishop for Board {
                 }
             }
         }
+        
+        // Filtrer les mouvements qui mettent le roi en échec
+        if let Some(piece) = square.get_piece() {
+            let from_coord = square.coordinate;
+            
+            moves.retain(|move_square| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
+        }
+        
         moves
     }
 }

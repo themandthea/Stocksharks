@@ -42,6 +42,13 @@ impl Knight for Board {
                 }
             }
 
+            // Filtrer les mouvements qui mettent le roi en échec
+            let from_coord = square.coordinate;
+            
+            moves.retain(|move_square| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
+            
             moves
         } else {
             vec![]

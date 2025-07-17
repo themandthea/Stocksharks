@@ -1,11 +1,11 @@
 use crate::chess::ChessBoard;
 use crate::chess::{Board, Color, Coordinate, Piece, Square}; // Add this import
 pub trait Pawn {
-    fn pawn_move(&self, square: &Square) -> Vec<Square>;
+    fn pawn_move(&self, square: &Square) -> Vec<(Square,Option<Square>)>;
 }
 
 impl Pawn for Board {
-    fn pawn_move(&self, square: &Square) -> Vec<Square> {
+    fn pawn_move(&self, square: &Square) -> Vec<(Square,Option<Square>)> {
         let mut available_moves = Vec::new();
         let piece = square.get_piece().unwrap();
         match piece {
@@ -19,7 +19,7 @@ impl Pawn for Board {
                         if square.available() {
                             let forward_square =
                                 Square::new(Some(*piece), Coordinate::new(column, line + 1)); // 1 square mouv
-                            available_moves.push(forward_square);
+                            available_moves.push((forward_square,None));
                         }
                     }
                     if column > 0 && line < 7 {
@@ -29,7 +29,37 @@ impl Pawn for Board {
                             if square_left.occupied_by_oponent(&Color::White) {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column - 1, line + 1)); // Eat by left
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
+                            }
+                        }
+                        
+                        // Capture en passant (à gauche)
+                        if line == 4 { // Les pions blancs en 5ème rangée peuvent capturer en passant
+                            if let Some(en_passant_coord) = &self.en_passant {
+                                // Vérifier si la case en passant est à gauche du pion
+                                if let Some(en_passant_column) = match en_passant_coord {
+                                    Coordinate::A(r) if *r == 5 => Some(0),
+                                    Coordinate::B(r) if *r == 5 => Some(1),
+                                    Coordinate::C(r) if *r == 5 => Some(2),
+                                    Coordinate::D(r) if *r == 5 => Some(3),
+                                    Coordinate::E(r) if *r == 5 => Some(4),
+                                    Coordinate::F(r) if *r == 5 => Some(5),
+                                    Coordinate::G(r) if *r == 5 => Some(6),
+                                    Coordinate::H(r) if *r == 5 => Some(7),
+                                    _ => None,
+                                } {
+                                    if en_passant_column == column - 1 {
+                                        // On peut capturer en passant
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column - 1, line + 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column - 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                }
                             }
                         }
                     }
@@ -40,7 +70,37 @@ impl Pawn for Board {
                             if square_right.occupied_by_oponent(&Color::White) {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column + 1, line + 1)); // Eat by Right
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
+                            }
+                        }
+                        
+                        // Capture en passant (à droite)
+                        if line == 4 { // Les pions blancs en 5ème rangée peuvent capturer en passant
+                            if let Some(en_passant_coord) = &self.en_passant {
+                                // Vérifier si la case en passant est à droite du pion
+                                if let Some(en_passant_column) = match en_passant_coord {
+                                    Coordinate::A(r) if *r == 5 => Some(0),
+                                    Coordinate::B(r) if *r == 5 => Some(1),
+                                    Coordinate::C(r) if *r == 5 => Some(2),
+                                    Coordinate::D(r) if *r == 5 => Some(3),
+                                    Coordinate::E(r) if *r == 5 => Some(4),
+                                    Coordinate::F(r) if *r == 5 => Some(5),
+                                    Coordinate::G(r) if *r == 5 => Some(6),
+                                    Coordinate::H(r) if *r == 5 => Some(7),
+                                    _ => None,
+                                } {
+                                    if en_passant_column == column + 1 {
+                                        // On peut capturer en passant
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column + 1, line + 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column + 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                }
                             }
                         }
                     }
@@ -54,33 +114,12 @@ impl Pawn for Board {
                             if square1.available() && square2.available() {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column, 3)); // 2 square mouv
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
                             }
                         }
                     }
                     4 => {
-                        // Logic for en passant left
-                        if let Some((previous_square, current_square)) = self.previous_move {
-                            match previous_square.get_piece() {
-                                Some(Piece::Pawn(Color::Black)) if previous_square.get_line().unwrap() == 6
-                                    && current_square.get_column().unwrap() == column-1
-                                    && current_square.get_line().unwrap() == 4 // Previous move is a black pawn that moved 2 squares
-                                    => {
-                                    // En passant ifmove
-                                    let en_passant_square = Square::new(Some(*piece), Coordinate::new(column-1, line+1)); // 1 square mouv
-                                    available_moves.push(en_passant_square);
-                                },
-                                Some(Piece::Pawn(Color::Black)) if previous_square.get_line().unwrap() == 6
-                                    && current_square.get_column().unwrap() == column+1
-                                    && current_square.get_line().unwrap() == 4 // Previous move is a black pawn that moved 2 squares
-                                    => {
-                                    // En passant move
-                                    let en_passant_square = Square::new(Some(*piece), Coordinate::new(column+1, line+1)); // 1 square mouv
-                                    available_moves.push(en_passant_square);
-                                },
-                                _ => return available_moves, // Previous move is not a black pawn, return empty
-                            }
-                        }
+                        // La capture en passant pour les pions blancs est maintenant gérée directement dans la section générale des mouvements
                     }
                     6 => {
                         // Logic for promotion
@@ -90,25 +129,25 @@ impl Pawn for Board {
                                     Some(Piece::Bishop(Color::White)),
                                     Coordinate::new(column, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(bishop_promotion);
+                                available_moves.push((bishop_promotion,None));
 
                                 let knight_promotion = Square::new(
                                     Some(Piece::Knight(Color::White)),
                                     Coordinate::new(column, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(knight_promotion);
+                                available_moves.push((knight_promotion,None));
 
                                 let rook_promotion = Square::new(
                                     Some(Piece::Rook(Color::White)),
                                     Coordinate::new(column, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(rook_promotion);
+                                available_moves.push((rook_promotion,None));
 
                                 let queen_promotion = Square::new(
                                     Some(Piece::Queen(Color::White)),
                                     Coordinate::new(column, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(queen_promotion);
+                                available_moves.push((queen_promotion,None));
                             }
                         }
                         if column > 0 {
@@ -120,25 +159,25 @@ impl Pawn for Board {
                                         Some(Piece::Bishop(Color::White)),
                                         Coordinate::new(column - 1, line + 1),
                                     ); // 1 square mouv
-                                    available_moves.push(bishop_promotion);
+                                    available_moves.push((bishop_promotion,None));
 
                                     let knight_promotion = Square::new(
                                         Some(Piece::Knight(Color::White)),
                                         Coordinate::new(column - 1, line + 1),
                                     ); // 1 square mouv
-                                    available_moves.push(knight_promotion);
+                                    available_moves.push((knight_promotion,None));
 
                                     let rook_promotion = Square::new(
                                         Some(Piece::Rook(Color::White)),
                                         Coordinate::new(column - 1, line + 1),
                                     ); // 1 square mouv
-                                    available_moves.push(rook_promotion);
+                                    available_moves.push((rook_promotion,None));
 
                                     let queen_promotion = Square::new(
                                         Some(Piece::Queen(Color::White)),
                                         Coordinate::new(column - 1, line + 1),
                                     ); // 1 square mouv
-                                    available_moves.push(queen_promotion);
+                                    available_moves.push((queen_promotion,None));
                                 }
                             }
                         }
@@ -151,25 +190,25 @@ impl Pawn for Board {
                                     Some(Piece::Bishop(Color::White)),
                                     Coordinate::new(column + 1, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(bishop_promotion);
+                                available_moves.push((bishop_promotion,None));
 
                                 let knight_promotion = Square::new(
                                     Some(Piece::Knight(Color::White)),
                                     Coordinate::new(column + 1, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(knight_promotion);
+                                available_moves.push((knight_promotion,None));
 
                                 let rook_promotion = Square::new(
                                     Some(Piece::Rook(Color::White)),
                                     Coordinate::new(column + 1, line + 1),
                                 ); // 1 square mouv
-                                available_moves.push(rook_promotion);
+                                available_moves.push((rook_promotion,None));
 
                                     let queen_promotion = Square::new(
                                         Some(Piece::Queen(Color::White)),
                                         Coordinate::new(column + 1, line + 1),
                                     ); // 1 square mouv
-                                    available_moves.push(queen_promotion);
+                                    available_moves.push((queen_promotion,None));
                                 }
                             }
                         }
@@ -187,7 +226,7 @@ impl Pawn for Board {
                         if square.available() {
                             let forward_square =
                                 Square::new(Some(*piece), Coordinate::new(column, line - 1)); // 1 square mouv
-                            available_moves.push(forward_square);
+                            available_moves.push((forward_square,None));
                         }
                     }
                     if column > 0 && line > 0 {
@@ -197,7 +236,37 @@ impl Pawn for Board {
                             if square_left.occupied_by_oponent(&Color::Black) {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column - 1, line - 1)); // Eat by left
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
+                            }
+                        }
+                        
+                        // Capture en passant (à gauche)
+                        if line == 3 { // Les pions noirs en 4ème rangée peuvent capturer en passant
+                            if let Some(en_passant_coord) = &self.en_passant {
+                                // Vérifier si la case en passant est à gauche du pion
+                                if let Some(en_passant_column) = match en_passant_coord {
+                                    Coordinate::A(r) if *r == 2 => Some(0),
+                                    Coordinate::B(r) if *r == 2 => Some(1),
+                                    Coordinate::C(r) if *r == 2 => Some(2),
+                                    Coordinate::D(r) if *r == 2 => Some(3),
+                                    Coordinate::E(r) if *r == 2 => Some(4),
+                                    Coordinate::F(r) if *r == 2 => Some(5),
+                                    Coordinate::G(r) if *r == 2 => Some(6),
+                                    Coordinate::H(r) if *r == 2 => Some(7),
+                                    _ => None,
+                                } {
+                                    if en_passant_column == column - 1 {
+                                        // On peut capturer en passant
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column - 1, line - 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column - 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                }
                             }
                         }
                     }
@@ -208,7 +277,37 @@ impl Pawn for Board {
                             if square_right.occupied_by_oponent(&Color::Black) {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column + 1, line - 1)); // Eat by Right
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
+                            }
+                        }
+                        
+                        // Capture en passant (à droite)
+                        if line == 3 { // Les pions noirs en 4ème rangée peuvent capturer en passant
+                            if let Some(en_passant_coord) = &self.en_passant {
+                                // Vérifier si la case en passant est à droite du pion
+                                if let Some(en_passant_column) = match en_passant_coord {
+                                    Coordinate::A(r) if *r == 2 => Some(0),
+                                    Coordinate::B(r) if *r == 2 => Some(1),
+                                    Coordinate::C(r) if *r == 2 => Some(2),
+                                    Coordinate::D(r) if *r == 2 => Some(3),
+                                    Coordinate::E(r) if *r == 2 => Some(4),
+                                    Coordinate::F(r) if *r == 2 => Some(5),
+                                    Coordinate::G(r) if *r == 2 => Some(6),
+                                    Coordinate::H(r) if *r == 2 => Some(7),
+                                    _ => None,
+                                } {
+                                    if en_passant_column == column + 1 {
+                                        // On peut capturer en passant
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column + 1, line - 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column + 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                }
                             }
                         }
                     }
@@ -222,31 +321,51 @@ impl Pawn for Board {
                             if square1.available() && square2.available() {
                                 let forward_square =
                                     Square::new(Some(*piece), Coordinate::new(column, 4)); // 2 square mouv
-                                available_moves.push(forward_square);
+                                available_moves.push((forward_square,None));
                             }
                         }
                     }
                     3 => {
-                        // Logic for en passant left
-                        if let Some((previous_square, current_square)) = self.previous_move {
-                            match previous_square.get_piece() {
-                                Some(Piece::Pawn(Color::Black)) if previous_square.get_line().unwrap() == 1
-                                    && current_square.get_column().unwrap() == column-1
-                                    && current_square.get_line().unwrap() == 3 // Previous move is a black pawn that moved 2 squares
-                                    => {
-                                    // En passant ifmove
-                                    let en_passant_square = Square::new(Some(*piece), Coordinate::new(column-1, line-1)); // 1 square mouv
-                                    available_moves.push(en_passant_square);
-                                },
-                                Some(Piece::Pawn(Color::Black)) if previous_square.get_line().unwrap() == 1
-                                    && current_square.get_column().unwrap() == column+1
-                                    && current_square.get_line().unwrap() == 3 // Previous move is a black pawn that moved 2 squares
-                                    => {
-                                    // En passant move
-                                    let en_passant_square = Square::new(Some(*piece), Coordinate::new(column+1, line-1)); // 1 square mouv
-                                    available_moves.push(en_passant_square);
-                                },
-                                _ => return available_moves, // Previous move is not a black pawn, return empty
+                        // Capture en passant (à gauche et à droite)
+                        if line == 3 { // Les pions blancs en 4ème rangée peuvent capturer en passant
+                            if let Some(en_passant_coord) = &self.en_passant {
+                                // Vérifier si la case en passant est à gauche ou à droite du pion
+                                if let Some(en_passant_column) = match en_passant_coord {
+                                    Coordinate::A(r) if *r == 2 => Some(0),
+                                    Coordinate::B(r) if *r == 2 => Some(1),
+                                    Coordinate::C(r) if *r == 2 => Some(2),
+                                    Coordinate::D(r) if *r == 2 => Some(3),
+                                    Coordinate::E(r) if *r == 2 => Some(4),
+                                    Coordinate::F(r) if *r == 2 => Some(5),
+                                    Coordinate::G(r) if *r == 2 => Some(6),
+                                    Coordinate::H(r) if *r == 2 => Some(7),
+                                    _ => None,
+                                } {
+                                    // Vérifier si la case en passant est à gauche du pion
+                                    if en_passant_column == column - 1 {
+                                        // On peut capturer en passant à gauche
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column - 1, line - 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column - 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                    // Vérifier si la case en passant est à droite du pion
+                                    else if en_passant_column == column + 1 {
+                                        // On peut capturer en passant à droite
+                                        let forward_square =
+                                            Square::new(Some(*piece), Coordinate::new(column + 1, line - 1));
+                                        
+                                        // La case où se trouve le pion capturé
+                                        let captured_pawn_coord = Coordinate::new(column + 1, line);
+                                        let captured_pawn = Square::new(None, captured_pawn_coord);
+                                        
+                                        available_moves.push((forward_square, Some(captured_pawn)));
+                                    }
+                                }
                             }
                         }
                     }
@@ -258,25 +377,25 @@ impl Pawn for Board {
                                     Some(Piece::Bishop(Color::Black)),
                                     Coordinate::new(column, line - 1),
                                 ); // 1 square mouv
-                                available_moves.push(bishop_promotion);
+                                available_moves.push((bishop_promotion,None));
 
                                 let knight_promotion = Square::new(
                                     Some(Piece::Knight(Color::Black)),
                                     Coordinate::new(column, line - 1),
                                 ); // 1 square mouv
-                                available_moves.push(knight_promotion);
+                                available_moves.push((knight_promotion,None));
 
                                 let rook_promotion = Square::new(
                                     Some(Piece::Rook(Color::Black)),
                                     Coordinate::new(column, line - 1),
                                 ); // 1 square mouv
-                                available_moves.push(rook_promotion);
+                                available_moves.push((rook_promotion,None));
 
                                 let queen_promotion = Square::new(
                                     Some(Piece::Queen(Color::Black)),
                                     Coordinate::new(column, line - 1),
                                 ); // 1 square mouv
-                                available_moves.push(queen_promotion);
+                                available_moves.push((queen_promotion,None));
                             }
                         }
                         if column  > 0 && line >0 {
@@ -288,25 +407,25 @@ impl Pawn for Board {
                                         Some(Piece::Bishop(Color::Black)),
                                         Coordinate::new(column - 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(bishop_promotion);
+                                    available_moves.push((bishop_promotion,None));
 
                                     let knight_promotion = Square::new(
                                         Some(Piece::Knight(Color::Black)),
                                         Coordinate::new(column - 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(knight_promotion);
+                                    available_moves.push((knight_promotion,None));
 
                                     let rook_promotion = Square::new(
                                         Some(Piece::Rook(Color::Black)),
                                         Coordinate::new(column - 1, line -  1),
                                     ); // 1 square mouv
-                                    available_moves.push(rook_promotion);
+                                    available_moves.push((rook_promotion,None));
 
                                     let queen_promotion = Square::new(
                                         Some(Piece::Queen(Color::Black)),
                                         Coordinate::new(column - 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(queen_promotion);
+                                    available_moves.push((queen_promotion,None));
                                 }
                             }
                         }
@@ -319,25 +438,25 @@ impl Pawn for Board {
                                         Some(Piece::Bishop(Color::Black)),
                                         Coordinate::new(column + 1, line -  1),
                                     ); // 1 square mouv
-                                    available_moves.push(bishop_promotion);
+                                    available_moves.push((bishop_promotion,None));
 
                                     let knight_promotion = Square::new(
                                         Some(Piece::Knight(Color::Black)),
                                         Coordinate::new(column + 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(knight_promotion);
+                                    available_moves.push((knight_promotion,None));
 
                                     let rook_promotion = Square::new(
                                         Some(Piece::Rook(Color::Black)),
                                         Coordinate::new(column + 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(rook_promotion);
+                                    available_moves.push((rook_promotion,None));
 
                                     let queen_promotion = Square::new(
                                         Some(Piece::Queen(Color::Black)),
                                         Coordinate::new(column + 1, line - 1),
                                     ); // 1 square mouv
-                                    available_moves.push(queen_promotion);
+                                    available_moves.push((queen_promotion,None));
                                 }
                             }
                         }
@@ -347,6 +466,16 @@ impl Pawn for Board {
             }
             _ => todo!("not the good piece"),
         }
+        
+        // Filtrer les mouvements qui mettent le roi en échec
+        if let Some(_) = square.get_piece() {
+            let from_coord = square.coordinate;
+            
+            available_moves.retain(|(move_square, _)| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
+        }
+        
         available_moves
     }
 }

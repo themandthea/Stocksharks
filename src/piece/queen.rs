@@ -164,6 +164,17 @@ impl Queen for Board {
             }
         }
 
+        // Filtrer les mouvements qui mettent le roi en échec
+        if let Some(piece) = square.get_piece() {
+            let color = piece.color();
+            let from_coord = square.coordinate;
+            
+            // Filtrer les mouvements qui mettent le roi en échec
+            moves.retain(|move_square| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
+        }
+
         moves
     }
 }
