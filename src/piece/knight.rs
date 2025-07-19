@@ -1,5 +1,6 @@
-use crate::chess::ChessBoard;
-use crate::chess::{Board, Coordinate, Piece, Square};
+use crate::board::ChessBoard;
+use crate::board::Board;
+use crate::{Coordinate, Piece, Square};
 pub trait Knight {
     fn knight_move(&self, square: &Square) -> Vec<Square>;
 }
@@ -24,7 +25,7 @@ impl Knight for Board {
                 let new_line = square.get_line().unwrap() as i8 + dx;
                 let new_column = square.get_column().unwrap() as i8 + dy;
                 if !(0..=7).contains(&new_line) || !(0..=7).contains(&new_column) {
-                    println!("out of bounds: ({}, {}) ", new_line, new_column);
+
                     continue; // Skip out of bounds
                 }
                 let new_coordinate = Coordinate::new(

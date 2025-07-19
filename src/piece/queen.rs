@@ -1,5 +1,6 @@
-use crate::chess::ChessBoard;
-use crate::chess::{Board, Color, Coordinate, Piece, Square}; // Add this import
+use crate::board::ChessBoard;
+use crate::board::Board;
+use crate::{Coordinate, Piece, Square};
 use std::cmp::min;
 
 pub trait Queen {
@@ -10,10 +11,6 @@ impl Queen for Board {
     fn queen_moves(&self, square: &Square) -> Vec<Square> {
         let mut moves: Vec<Square> = vec![];
         if let Some(Piece::Queen(color)) = square.get_piece() {
-            dbg!(square);
-            dbg!(color);
-            dbg!(square.get_line());
-            dbg!(square.get_column());
             let column = square.get_column().unwrap();
             let line = square.get_line().unwrap();
 
@@ -165,8 +162,7 @@ impl Queen for Board {
         }
 
         // Filtrer les mouvements qui mettent le roi en échec
-        if let Some(piece) = square.get_piece() {
-            let color = piece.color();
+        if let Some(_) = square.get_piece() {
             let from_coord = square.coordinate;
             
             // Filtrer les mouvements qui mettent le roi en échec

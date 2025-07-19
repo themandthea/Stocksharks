@@ -1,5 +1,6 @@
-use crate::chess::ChessBoard;
-use crate::chess::{Board, Coordinate, Piece, Square}; // Add this import
+use crate::board::ChessBoard;
+use crate::board::Board;
+use crate::{Coordinate, Piece, Square};
 
 pub trait Rook {
     fn rook_move(&self, square: &Square) -> Vec<Square>;
@@ -99,7 +100,7 @@ impl Rook for Board {
         }
         
         // Filtrer les mouvements qui mettent le roi en échec
-        if let Some(piece) = square.get_piece() {
+        if let Some(_) = square.get_piece() {
             let from_coord = square.coordinate;
             
             available_moves.retain(|move_square| {

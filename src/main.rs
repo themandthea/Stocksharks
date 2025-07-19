@@ -1,18 +1,35 @@
-pub mod chess;
+pub mod utils;
 pub mod piece;
-use crate::chess::ChessBoard;
-use crate::chess::Color;
-use crate::chess::Coordinate;
-use crate::chess::Piece;
-use crate::chess::Square;
+pub mod board;
+pub mod api;
+use crate::board::Board;
+use crate::utils::{Coordinate, Piece, Square, Color};
 use crate::piece::king::King;
 use crate::piece::knight::Knight;
 use crate::piece::rook::Rook;
 use crate::piece::pawn::Pawn;
+use crate::api::lichess_bot::send_move;
+use crate::board::ChessBoard;
 
-use chess::Board;   
+use std::env;
+
 fn main() {
-    let mut board = Board::empty();
+
+    /* 
+        // Récupère les infos depuis les variables d'environnement ou remplace par tes valeurs
+    let token = env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
+    let game_id = "votre_game_id"; // Remplace par l'ID de la partie
+    let move_uci = "e2e4"; // Remplace par ton coup au format UCI
+
+    if let Err(e) = send_move(game_id, move_uci, &token) {
+        eprintln!("Erreur : {}", e);
+    }
+
+*/
+
+
+    let mut board = Board::new();
+    /* 
     let _ = board.set_piece(Coordinate::E(0), Some(Piece::King(Color::White)));
     let _ =board.set_piece(Coordinate::E(3), Some(Piece::Knight(Color::White)));
     let _ =board.set_piece(Coordinate::D(0), Some(Piece::Rook(Color::White)));
@@ -22,41 +39,13 @@ fn main() {
     let _ = board.set_piece(Coordinate::C(5), Some(Piece::Bishop(Color::White)));
     let _ = board.set_piece(Coordinate::C(2), Some(Piece::Bishop(Color::Black)));
     println!("{}", board);  // Utilise l'implémentation du trait Display
-
-    let pawn_moves = board.pawn_move(&Square::new(Some(Piece::Pawn(Color::Black)), Coordinate::D(6)));
-    let rook_moves = board.rook_move(&Square::new(Some(Piece::Rook(Color::White)), Coordinate::D(0)));
-    let rook_moves2 = board.knight_move(&Square::new(Some(Piece::Knight(Color::White)), Coordinate::E(3)));
-/* 
-    //let white_king = board.king_move(&Square::new(Some(Piece::King(Color::White)),Coordinate::E(0)));
-
-    //let black_king = board.king_move(&Square::new(Some(Piece::King(Color::Black)),Coordinate::E(7)));
-
-    for square in white_king {
-        println!("White King can move to: {:?}", square);
-    }
-    
-    for square in black_king {
-        println!("Black King can move to: {:?}", square);
-    }
 */
-    for square in pawn_moves {
-        println!("Black Rook can move to: {:?}", square);
-    }
-    for square in rook_moves {
-        println!("White Rook can move to: {:?}", square);
-    }
-    for square in rook_moves2 {
-        println!("White knight can move to: {:?}", square);
-    }
-    println!("White K : {}", board.is_in_check(&Color::White));
-    println!("Black K : {}", board.is_in_check(&Color::Black));
+   let legalmoves = board.legal_moves().unwrap();
 
-    // Créer un board à partir d'une notation FEN
-    let fen_string = "rnbqkbnr/pppppppp/8/8/2B1P3/5N2/PPPP1PPP/RNBQK2R";
-    let board = Board::from_fen(fen_string).unwrap();
-    println!("{}", board);  // Utilise l'implémentation du trait Display
-    // Obtenir la notation FEN d'un board existant
-    let fen_string = board.to_fen();
-    println!("FEN: {}", fen_string);    
+    // Afficher les coups légaux
+    legalmoves.iter().for_each(|square| {
+        println!("Legal move: \n{}", square);
+    });
+    
 
 }

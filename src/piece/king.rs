@@ -1,5 +1,6 @@
-use crate::chess::ChessBoard;
-use crate::chess::{Board, Coordinate,Color, Piece, Square};
+use crate::board::ChessBoard;
+use crate::board::Board;
+use crate::{Coordinate, Piece, Square, Color};
 pub trait King {
     fn king_move(&self, square: &Square) -> Vec<Square>;
     fn is_in_check(&self, color: &Color) -> bool;
@@ -197,6 +198,15 @@ impl King for Board {
                     }
                 }
             }
+        }
+
+        // Filtrer les mouvements qui mettent le roi en échec
+        if let Some(_) = square.get_piece() {
+            let from_coord = square.coordinate;
+            
+            moves.retain(|move_square| {
+                self.is_move_safe(from_coord, move_square.coordinate)
+            });
         }
         moves
     }
