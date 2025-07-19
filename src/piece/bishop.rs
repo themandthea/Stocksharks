@@ -1,6 +1,6 @@
 use crate::board::ChessBoard;
 use crate::board::Board;
-use crate::{Coordinate, Piece, Square};
+use crate::utils::{Coordinate, Piece, Square};
 use std::cmp::min;
 
 pub trait Bishop {

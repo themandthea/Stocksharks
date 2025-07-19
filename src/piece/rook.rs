@@ -1,6 +1,6 @@
 use crate::board::ChessBoard;
 use crate::board::Board;
-use crate::{Coordinate, Piece, Square};
+use crate::utils::{Coordinate, Piece, Square};
 
 pub trait Rook {
     fn rook_move(&self, square: &Square) -> Vec<Square>;

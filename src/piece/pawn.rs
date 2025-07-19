@@ -1,6 +1,6 @@
 use crate::board::ChessBoard;
 use crate::board::Board;
-use crate::{Coordinate, Piece, Square,Color};
+use crate::utils::{Coordinate, Piece, Square,Color};
 pub trait Pawn {
     fn pawn_move(&self, square: &Square) -> Vec<Square>;
 }
