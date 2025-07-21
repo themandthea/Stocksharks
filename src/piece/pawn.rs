@@ -327,7 +327,7 @@ impl Pawn for Board {
                                     _ => None,
                                 } {
                                     // Vérifier si la case en passant est à gauche du pion
-                                    if en_passant_column == column - 1 {
+                                    if column >1 && en_passant_column == column - 1 {
                                         // On peut capturer en passant à gauche
                                         let forward_square =
                                             Square::new(Some(*piece), Coordinate::new(column - 1, line - 1));
@@ -335,7 +335,7 @@ impl Pawn for Board {
                                         available_moves.push(forward_square);
                                     }
                                     // Vérifier si la case en passant est à droite du pion
-                                    else if en_passant_column == column + 1 {
+                                    else if column<7 && en_passant_column == column + 1 {
                                         // On peut capturer en passant à droite
                                         let forward_square =
                                             Square::new(Some(*piece), Coordinate::new(column + 1, line - 1));

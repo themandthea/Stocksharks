@@ -64,7 +64,7 @@ pub fn get_game_fen(game_id: &str, token: &str) -> Result<String, Box<dyn Error>
                 if let Some(id) = game.get("gameId").and_then(|v| v.as_str()) {
                     if id == game_id {
                         if let Some(fen) = game.get("fen").and_then(|f| f.as_str()) {
-                            println!("FEN: {}", fen);
+                            //println!("FEN: {}", fen);
                             return Ok(fen.to_string());
                         }
                     }
