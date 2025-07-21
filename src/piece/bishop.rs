@@ -1,5 +1,4 @@
-use crate::board::ChessBoard;
-use crate::board::Board;
+use crate::board_utils::chessboard::{Board, ChessBoard};
 use crate::{Coordinate, Piece, Square};
 use std::cmp::min;
 

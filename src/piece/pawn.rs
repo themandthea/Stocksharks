@@ -1,6 +1,5 @@
-use crate::board::ChessBoard;
-use crate::board::Board;
-use crate::{Coordinate, Piece, Square,Color};
+use crate::board_utils::chessboard::{Board, ChessBoard};
+use crate::utils::{Coordinate, Piece, Square,Color};
 pub trait Pawn {
     fn pawn_move(&self, square: &Square) -> Vec<Square>;
 }
@@ -14,7 +13,7 @@ impl Pawn for Board {
                 // Logic for vertical pawn movess
                 let column = square.get_column().unwrap(); // Assuming column is always valid otherwise panic
                 let line = square.get_line().unwrap(); // Assuming line is always valid otherwise panic
-                if line != 6 {
+                if line < 6 {
                     // Logic for other cases
                     if let Some(square) = self.get_square(Coordinate::new(column, line + 1)) {
                         if square.available() {
@@ -214,7 +213,7 @@ impl Pawn for Board {
                 // Logic for vertical pawn moves
                 let column = square.get_column().unwrap(); // Assuming column is always valid otherwise panic
                 let line = square.get_line().unwrap(); // Assuming line is always valid otherwise panic
-                if line != 1 {
+                if line > 1 {
                     // Logic for other cases
                     if let Some(square) = self.get_square(Coordinate::new(column, line - 1)) {
                         if square.available() {

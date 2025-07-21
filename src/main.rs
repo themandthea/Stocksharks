@@ -1,51 +1,48 @@
 pub mod utils;
 pub mod piece;
-pub mod board;
+pub mod board_utils;
 pub mod api;
-use crate::board::Board;
+pub mod ai;
+use crate::board_utils::chessboard::{Board, ChessBoard};
 use crate::utils::{Coordinate, Piece, Square, Color};
-use crate::piece::king::King;
-use crate::piece::knight::Knight;
-use crate::piece::rook::Rook;
-use crate::piece::pawn::Pawn;
-use crate::api::lichess_bot::send_move;
-use crate::board::ChessBoard;
+use crate::api::lichess_bot::{send_move, get_game_fen, get_game_ids};
+use crate::ai::alpha_beta;
 
+
+
+use std::thread;
 use std::env;
-
+ use std::time::Duration;
+   
 fn main() {
 
-    /* 
         // Récupère les infos depuis les variables d'environnement ou remplace par tes valeurs
     let token = env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
-    let game_id = "votre_game_id"; // Remplace par l'ID de la partie
-    let move_uci = "e2e4"; // Remplace par ton coup au format UCI
+    let binding = get_game_ids(&token).unwrap();
+    let game_id = binding.first(); // Remplace par l'ID de la partie
+    println!("game_id: {:?}", game_id);
 
-    if let Err(e) = send_move(game_id, move_uci, &token) {
-        eprintln!("Erreur : {}", e);
-    }
+    let binding = "OZZQHwNj".to_string();
+    let id = game_id.unwrap_or(&binding);
 
-*/
-
-
-    let mut board = Board::new();
-    /* 
-    let _ = board.set_piece(Coordinate::E(0), Some(Piece::King(Color::White)));
-    let _ =board.set_piece(Coordinate::E(3), Some(Piece::Knight(Color::White)));
-    let _ =board.set_piece(Coordinate::D(0), Some(Piece::Rook(Color::White)));
-    let _ =board.set_piece(Coordinate::E(7), Some(Piece::King(Color::Black)));
-    let _ = board.set_piece(Coordinate::H(7), Some(Piece::Rook(Color::Black)));
-    let _ = board.set_piece(Coordinate::D(6), Some(Piece::Pawn(Color::Black)));
-    let _ = board.set_piece(Coordinate::C(5), Some(Piece::Bishop(Color::White)));
-    let _ = board.set_piece(Coordinate::C(2), Some(Piece::Bishop(Color::Black)));
-    println!("{}", board);  // Utilise l'implémentation du trait Display
-*/
-   let legalmoves = board.legal_moves().unwrap();
-
-    // Afficher les coups légaux
-    legalmoves.iter().for_each(|square| {
-        println!("Legal move: \n{}", square);
-    });
+    let mut fen = get_game_fen(id, &token).unwrap();
+    println!("FEN: {:?}", fen);
     
+    loop {
+        fen = get_game_fen(id, &token).unwrap();
+        let board = Board::from_fen(&fen).unwrap();
+        if board.color_to_play() == Color::White {
+            println!("C'est le tour des noirs, on attend le coup de l'adversaire...");
+            continue; // On attend le coup de l'adversaire
+        }
+        print!("{}\n", board);
 
+        let (mov,value)  = alpha_beta::alpha_beta(&board, 3,i32::MIN,i32::MAX, true);
+        println!("Coup choisi: {:?} avec une valeur de {}", mov, value);
+        if let Err(e) = send_move(id, &mov, &token) {
+        eprintln!("Erreur : {}", e);
+        }
+        thread::sleep(Duration::from_millis(500)); // Attendre 0.5 seconde avant de continuer
+
+    }
 }
