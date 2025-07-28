@@ -138,3 +138,12 @@ impl Display for Square {
         }
     }
 }
+
+impl Default for Square {
+    fn default() -> Self {
+        Square {
+            piece: None,
+            coordinate: Coordinate::Out,
+        }
+    }
+}

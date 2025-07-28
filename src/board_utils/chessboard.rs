@@ -1,3 +1,4 @@
+use crate::ai::alpha_beta::Heuristic;
 use crate::piece::bishop::Bishop;
 use crate::piece::king::King;
 use crate::piece::knight::Knight;
@@ -14,8 +15,7 @@ pub trait ChessBoard {
     fn set_piece(&mut self, square: Coordinate, piece: Option<Piece>) -> Result<(), ()>;
     fn empty() -> Self;
     fn color_to_play(&self) -> Color ;
-    }
-
+}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Board {
     pub squares: [Square; 64],
@@ -441,4 +441,34 @@ impl Board {
             false
         }
     }
+
+
+
 }
+
+ // ou le chemin correct vers ton trait Heuristic
+
+pub fn compare_boards<H: Heuristic>(
+    board1: &Board,
+    board2: &Board,
+    heuristic: &H,
+) -> std::cmp::Ordering {
+    let eval1 = heuristic.evaluate(board1);
+    let eval2 = heuristic.evaluate(board2);
+    eval1.cmp(&eval2)
+}
+
+    pub fn legal_moves_ordered<H : Heuristic>(board  : &Board, heuristic: &H ) -> Vec<(Square,Square,Board)> {
+    let mut ordered_boards = Vec::new();
+    let mut legal_moves = board.legal_moves().unwrap();
+    for (initial_pos, mov) in legal_moves.iter_mut() {
+        let new_board = board.clone().implement_move_board(initial_pos.coordinate, mov.coordinate);
+        ordered_boards.push((initial_pos.clone(), mov.clone(), new_board));
+    }
+    ordered_boards.sort_by(|(_, _, a), (_, _, b)| {
+        compare_boards(a, b, heuristic)
+    });
+    ordered_boards
+}
+
+

@@ -7,45 +7,83 @@ use crate::board_utils::chessboard::{Board, ChessBoard};
 use crate::utils::{Coordinate, Piece, Square, Color};
 use crate::api::lichess_bot::{send_move, get_game_fen, get_game_ids};
 use crate::ai::alpha_beta;
+use crate::alpha_beta::Evaluate;
 
 use std::thread;
 use std::env;
- use std::time::Duration;
-   
+use std::time::Duration;
+
 fn main() {
+    use crate::api::lichess_bot::{challenge_player, get_game_ids, get_game_fen, send_move, get_bot_color};
 
-        // Récupère les infos depuis les variables d'environnement ou remplace par tes valeurs
     let token = env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
-    let binding = get_game_ids(&token).unwrap();
-    let game_id = binding.first(); // Remplace par l'ID de la partie
-    println!("game_id: {:?}", game_id);
 
-    let binding = "OZZQHwNj".to_string();
-    let id = game_id.unwrap_or(&binding);
+    // 1. Envoyer le défi
+    if let Err(e) = challenge_player("yodavsshrek", &token) {
+        eprintln!("Erreur lors de l'envoi du défi : {}", e);
+        return;
+    }
+    println!("Défi envoyé à yodavsshrek, en attente d'acceptation...");
 
-    /* 
-    let puzzle = "8/8/7K/8/8/6Q1/3k1R2/8 b - - 0 1".to_string();
-    let board = Board::from_fen(&puzzle).unwrap();
-    let (mov, value) = alpha_beta::alpha_beta(&board, 5, i32::MIN, i32::MAX);
-    println!("Coup choisi: {:?} avec une valeur de {}", mov, value);
-*/
-    let mut fen = get_game_fen(id, &token).unwrap();
-    //println!("FEN: {:?}", fen);
-    loop {
-        fen = get_game_fen(id, &token).unwrap();
-        let board = Board::from_fen(&fen).unwrap();
-        if board.color_to_play() == Color::Black {
-            //println!("C'est le tour des noirs, on attend le coup de l'adversaire...");
-            continue; // On attend le coup de l'adversaire
+    // 2. Attendre que la partie commence et récupérer l'ID
+    let game_id = loop {
+        thread::sleep(Duration::from_secs(2));
+        let ids = get_game_ids(&token).unwrap_or_default();
+        if let Some(id) = ids.first() {
+            println!("Partie trouvée ! game_id: {}", id);
+            break id.clone();
         }
+        println!("En attente que la partie commence...");
+    };
+
+    // 3. Récupérer la couleur du bot
+    let my_color = get_bot_color(&game_id, &token).unwrap().unwrap();
+    println!("Je joue la couleur : {:?}", my_color);
+
+    // 4. Boucle de jeu
+    loop {
+        let fen = get_game_fen(&game_id, &token).unwrap();
+        let board = Board::from_fen(&fen).unwrap();
+
+        // Si ce n'est pas à nous de jouer, on attend
+        if board.color_to_play() != my_color {
+            thread::sleep(Duration::from_secs(1));
+            continue;
+        }
+
         print!("{}\n", board);
 
-        let (mov,value)  = alpha_beta::alpha_beta(&board, 2,i32::MIN,i32::MAX,);
-        println!("Coup choisi: {:?} avec une valeur de {}", mov, value);
-        if let Err(e) = send_move(id, &mov, &token) {
-        eprintln!("Erreur : {}", e);
-        }
-        thread::sleep(Duration::from_millis(1000)); // Attendre 0.5 seconde avant de continuer
+        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 5);
+        let mov = board.get_uci_move(&init_pos, &dest_pos);
+        println!("Coup choisi: {:?} avec une valeur de {:?}", mov, value);
 
+        if let Some(mov) = mov {
+            if let Err(e) = send_move(&game_id, &mov, &token) {
+                eprintln!("Erreur : {}", e);
+            }
+        } else {
+            println!("Aucun coup valide trouvé, partie terminée ?");
+            break;
+        }
+
+        thread::sleep(Duration::from_secs(1));
     }
 }
+
+/* 
+    let puzzle = "8/8/7K/8/8/5QR1/2k5/8 w - - 0 1".to_string();
+    let mut board = Board::from_fen(&puzzle).unwrap();
+    loop{
+
+    println!("{}",board);
+    thread::sleep(Duration::from_secs(2)); // Attendre 0.5 seconde avant de continuer
+    let ((init_pos,dest_pos), value) = alpha_beta::alpha_beta(&board, 4, Evaluate::MateForBlack(0), Evaluate::MateForWhite(0));
+    println!("Coup choisi: {:?} avec une valeur de {:?}", dest_pos, value);
+    if dest_pos.get_line().is_none() {
+        println!("Pas de coup possible, checkmate ou pat.");
+        break; // On attend le coup de l'adversaire
+    }
+    println!("color to play: {:?}", board.color_to_play());
+    board = board.implement_move_board(init_pos.coordinate(), dest_pos.coordinate());
+    println!("color to play: {:?}", board.color_to_play());
+*/
