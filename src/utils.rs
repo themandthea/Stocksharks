@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     White,
     Black,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Piece {
     Pawn(Color),
     Knight(Color),
@@ -29,7 +29,7 @@ impl Piece {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Coordinate {
     A(u8),
     B(u8),
@@ -70,7 +70,7 @@ impl Coordinate {
     }
 }
 // Correction des noms de types pour respecter la convention Rust
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Square {
     pub piece: Option<Piece>,
     pub coordinate: Coordinate,

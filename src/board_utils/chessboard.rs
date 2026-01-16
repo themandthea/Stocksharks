@@ -16,7 +16,7 @@ pub trait ChessBoard {
     fn empty() -> Self;
     fn color_to_play(&self) -> Color ;
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Hash, Debug, Clone, PartialEq, Eq,Copy)]
 pub struct Board {
     pub squares: [Square; 64],
     pub en_passant: Option<Coordinate>, // Position de la case où une capture en passant est possible
@@ -458,7 +458,7 @@ pub fn compare_boards<H: Heuristic>(
     eval1.cmp(&eval2)
 }
 
-    pub fn legal_moves_ordered<H : Heuristic>(board  : &Board, heuristic: &H ) -> Vec<(Square,Square,Board)> {
+pub fn legal_moves_ordered<H : Heuristic>(board  : &Board, heuristic: &H ) -> Vec<(Square,Square,Board)> {
     let mut ordered_boards = Vec::new();
     let mut legal_moves = board.legal_moves().unwrap();
     for (initial_pos, mov) in legal_moves.iter_mut() {

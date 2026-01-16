@@ -4,11 +4,10 @@ pub mod board_utils;
 pub mod api;
 pub mod ai;
 use crate::board_utils::chessboard::{Board, ChessBoard};
-use crate::utils::{Coordinate, Piece, Square, Color};
-use crate::api::lichess_bot::{send_move, get_game_fen, get_game_ids};
+use crate::utils::{Coordinate, Piece, Square};
 use crate::ai::alpha_beta;
-use crate::alpha_beta::Evaluate;
 
+use std::time::Instant;
 use std::thread;
 use std::env;
 use std::time::Duration;
@@ -53,7 +52,13 @@ fn main() {
 
         print!("{}\n", board);
 
-        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 5);
+        let start = Instant::now();
+
+        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 4);
+
+        let duration = start.elapsed();
+        println!("Temps d'exécution pour alpha_beta : {:?}", duration);
+
         let mov = board.get_uci_move(&init_pos, &dest_pos);
         println!("Coup choisi: {:?} avec une valeur de {:?}", mov, value);
 

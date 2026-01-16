@@ -4,6 +4,7 @@ use crate::{
     utils::{Piece, Color, Square},
 };
 
+use std::collections::HashMap;
 use crate::piece::king::King;
 use std::cmp::Ordering;
 pub trait Heuristic {
@@ -82,6 +83,94 @@ impl Heuristic for SimpleHeuristic {
     }
 }
 
+pub struct Search {
+    pub hashtable: HashMap<(u8,Board), Evaluate>,
+    pub cutoff: u8,
+
+}
+
+impl Search {
+    pub fn new() -> Self {
+        Search {
+            hashtable: HashMap::new(),
+            cutoff: 0,
+        }
+    }
+    pub fn get(&self,depth: u8, key: &Board) -> Option<&Evaluate> {
+        self.hashtable.get(&(depth,*key))
+    }
+
+    pub fn insert(&mut self,depth: u8, key: Board, value: Evaluate) {
+        self.hashtable.insert((depth,key), value);
+    }
+
+    pub fn alpha_beta(&mut self, board: &Board, depth: u8, mut alpha: Evaluate, mut beta: Evaluate) -> ((Square,Square), Evaluate) {
+    let color = board.color_to_play();
+    let maximizing_player= match color{
+        Color::White => true, // White is always the maximizing player
+        Color::Black => false, // Black is the minimizing player
+    }; 
+    
+    if let Some(value) = self.get(depth, board) {
+        return ((Square::default(),Square::default()),*value);
+    }
+
+    if depth == 0 {
+        return ((Square::default(),Square::default()), SimpleHeuristic{}.evaluate(board))
+    }
+    //println!("Evaluating board at depth : {} with player : {}", depth,maximizing_player);
+
+    let mut best_value = if maximizing_player { Evaluate::MateForBlack(0) } else { Evaluate::MateForWhite(0) };
+    let mut best_move =(Square::default(),Square::default());
+    let legal_move = legal_moves_ordered(board, &SimpleHeuristic{});
+
+    //println!("Legal moves for {:?}: {:?}", color, legal_move.is_empty());
+    //println!("board in check: {}", board.is_in_check(&color));
+    if legal_move.is_empty() && board.is_in_check(&color) {
+        println!("Checkmate");
+        match color {
+            Color::White => return ((Square::default(),Square::default()),Evaluate::MateForBlack(depth)), // les noirs ont maté
+            Color::Black => return ((Square::default(),Square::default()),Evaluate::MateForWhite(depth)), // les blancs ont maté
+        }
+    }
+    if legal_move.is_empty() {
+        return ((Square::default(),Square::default()), Evaluate::Eval(0)); // stalemate
+    }
+    
+
+    for (initial_pos, mov, new_board) in legal_move {
+        let (_, value) = self.alpha_beta(&new_board, depth - 1, alpha, beta);
+
+        if maximizing_player {
+            if value >= best_value {
+                best_value = value;
+                best_move = (initial_pos, mov);
+            }
+            if value > alpha {
+                alpha = value;
+            }
+        } else {
+            if value <= best_value {
+                best_value = value;
+                best_move = (initial_pos, mov);
+            }
+            if value < beta {
+                beta = value;
+            }
+        }
+
+        if beta < alpha {
+            break; // Alpha-Beta pruning
+        }
+    }
+    // Store the best value in the hashtable
+    self.insert(depth,*board, best_value);
+
+    (best_move, best_value)
+}
+}
+
+/* 
 pub fn alpha_beta(board: &Board, depth: u8, mut alpha: Evaluate, mut beta: Evaluate) -> ((Square,Square), Evaluate) {
     let color = board.color_to_play();
     let maximizing_player= match color{
@@ -96,7 +185,7 @@ pub fn alpha_beta(board: &Board, depth: u8, mut alpha: Evaluate, mut beta: Evalu
 
     let mut best_value = if maximizing_player { Evaluate::MateForBlack(0) } else { Evaluate::MateForWhite(0) };
     let mut best_move =(Square::default(),Square::default());
-    let legal_move = legal_moves_ordered(board,&SimpleHeuristic{});
+    let legal_move = legal_moves_ordered(board, &SimpleHeuristic{});
 
     //println!("Legal moves for {:?}: {:?}", color, legal_move.is_empty());
     //println!("board in check: {}", board.is_in_check(&color));
@@ -110,51 +199,40 @@ pub fn alpha_beta(board: &Board, depth: u8, mut alpha: Evaluate, mut beta: Evalu
     if legal_move.is_empty() {
         return ((Square::default(),Square::default()), Evaluate::Eval(0)); // stalemate
     }
-    for (initial_pos,mov,new_board) in legal_move {        
+
+    for (initial_pos, mov, new_board) in legal_move {
         let (_, value) = alpha_beta(&new_board, depth - 1, alpha, beta);
-        //print!("depth : {}, Evaluating move: {} with value: {}\n",depth, board.get_uci_move(&initial_pos, &mov).unwrap(), value);
 
         if maximizing_player {
             if value >= best_value {
                 best_value = value;
                 best_move = (initial_pos, mov);
             }
-            
             if value > alpha {
                 alpha = value;
             }
-             
         } else {
             if value <= best_value {
                 best_value = value;
                 best_move = (initial_pos, mov);
             }
-            
-            if value <  beta {
+            if value < beta {
                 beta = value;
             }
-             
         }
 
         if beta < alpha {
-            //println!("Alpha-Beta pruning at depth: {}, move: {}", depth, board.get_uci_move(&initial_pos, &mov).unwrap());
             break; // Alpha-Beta pruning
         }
     }
     (best_move, best_value)
 }
-
-pub fn alpha_beta_root(board: &Board, depth: u8) -> ((Square,Square), Evaluate) {
-    let color = board.color_to_play();
-    let maximizing_player= match color{
-        Color::White => true, // White is always the maximizing player
-        Color::Black => false, // Black is the minimizing player
-    };
-    
-    let alpha = if maximizing_player { Evaluate::MateForBlack(255) } else { Evaluate::MateForWhite(255) };
-    let beta = if maximizing_player { Evaluate::MateForWhite(255) } else { Evaluate::MateForBlack(255) };
-    
-    alpha_beta(board, depth, alpha,beta)
+*/
+pub fn alpha_beta_root(board: &Board, depth: u8) -> ((Square,Square), Evaluate) {    
+    let alpha =  Evaluate::MateForBlack(255);
+    let beta = Evaluate::MateForWhite(255);
+    let mut search = Search::new();
+    search.alpha_beta(board, depth, alpha,beta)
 }
 
 
