@@ -18,7 +18,7 @@ fn main() {
     let token = env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
 
     // 1. Envoyer le défi
-    if let Err(e) = challenge_player("yodavsshrek", &token) {
+    if let Err(e) = challenge_player("itchly", &token) {
         eprintln!("Erreur lors de l'envoi du défi : {}", e);
         return;
     }
