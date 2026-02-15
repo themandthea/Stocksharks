@@ -1,24 +1,27 @@
-pub mod utils;
-pub mod piece;
-pub mod board_utils;
-pub mod api;
 pub mod ai;
+pub mod api;
+pub mod board_utils;
+pub mod piece;
+pub mod utils;
+use crate::ai::alpha_beta;
 use crate::board_utils::chessboard::{Board, ChessBoard};
 use crate::utils::{Coordinate, Piece, Square};
-use crate::ai::alpha_beta;
 
-use std::time::Instant;
-use std::thread;
 use std::env;
+use std::thread;
 use std::time::Duration;
+use std::time::Instant;
 
 fn main() {
-    use crate::api::lichess_bot::{challenge_player, get_game_ids, get_game_fen, send_move, get_bot_color};
+    use crate::api::lichess_bot::{
+        challenge_player, get_bot_color, get_game_fen, get_game_ids, send_move,
+    };
 
-    let token = env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
+    let token =
+        env::var("LICHESS_TOKEN").expect("Définis la variable d'environnement LICHESS_TOKEN");
 
     // 1. Envoyer le défi
-    if let Err(e) = challenge_player("itchly", &token) {
+    if let Err(e) = challenge_player("yodavsshrek", &token) {
         eprintln!("Erreur lors de l'envoi du défi : {}", e);
         return;
     }
@@ -50,11 +53,11 @@ fn main() {
             continue;
         }
 
-        print!("{}\n", board);
+        println!("{}", board);
 
         let start = Instant::now();
 
-        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 4);
+        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 3);
 
         let duration = start.elapsed();
         println!("Temps d'exécution pour alpha_beta : {:?}", duration);
@@ -75,7 +78,7 @@ fn main() {
     }
 }
 
-/* 
+/*
     let puzzle = "8/8/7K/8/8/5QR1/2k5/8 w - - 0 1".to_string();
     let mut board = Board::from_fen(&puzzle).unwrap();
     loop{

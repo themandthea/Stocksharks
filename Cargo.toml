@@ -1,10 +1,18 @@
+[[bin]]
+name = "game"
+path = "src/main.rs"
+
+[[bin]]
+name = "train"
+path = "src/train_cnn.rs"
+
 [package]
 name = "stocksharks"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-dfdx = "0.13.0"
+dfdx = { version = "0.13.0", features = ["safetensors"] }
 reqwest = { version = "0.12", features = ["blocking"] }
-serde = "1.0.219"
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.141"

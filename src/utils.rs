@@ -68,6 +68,34 @@ impl Coordinate {
             _ => Coordinate::Out,
         }
     }
+    pub fn from(coordonnee : &str) -> Self {
+        if coordonnee.len() != 2 {
+            return Coordinate::Out;
+        }
+        let file = match coordonnee.chars().nth(0).unwrap() {
+            'a' | 'A' => 0,
+            'b' | 'B' => 1,
+            'c' | 'C' => 2,
+            'd' | 'D' => 3,
+            'e' | 'E' => 4,
+            'f' | 'F' => 5,
+            'g' | 'G' => 6,
+            'h' | 'H' => 7,
+            _ => return Coordinate::Out,
+        };
+        let rank = match coordonnee.chars().nth(1).unwrap() {
+            '1' => 0,
+            '2' => 1,
+            '3' => 2,
+            '4' => 3,
+            '5' => 4,
+            '6' => 5,
+            '7' => 6,
+            '8' => 7,
+            _ => return Coordinate::Out,
+        };
+        Coordinate::new(file, rank)
+    }
 }
 // Correction des noms de types pour respecter la convention Rust
 #[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]

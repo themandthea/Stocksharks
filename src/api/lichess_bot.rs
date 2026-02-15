@@ -3,8 +3,15 @@ use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use std::error::Error;
 
-pub fn send_move(game_id: &str, move_uci: &str, token: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let url = format!("https://lichess.org/api/bot/game/{}/move/{}", game_id, move_uci);
+pub fn send_move(
+    game_id: &str,
+    move_uci: &str,
+    token: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let url = format!(
+        "https://lichess.org/api/bot/game/{}/move/{}",
+        game_id, move_uci
+    );
 
     let client = Client::new();
     let res = client
@@ -43,10 +50,13 @@ pub fn get_game_ids(token: &str) -> Result<Vec<String>, Box<dyn Error>> {
         }
         Ok(ids)
     } else {
-        Err(format!("Erreur lors de la récupération des parties : {:?}", res.text()?).into())
+        Err(format!(
+            "Erreur lors de la récupération des parties : {:?}",
+            res.text()?
+        )
+        .into())
     }
 }
-
 
 pub fn get_game_fen(game_id: &str, token: &str) -> Result<String, Box<dyn Error>> {
     let url = "https://lichess.org/api/account/playing";
@@ -59,7 +69,7 @@ pub fn get_game_fen(game_id: &str, token: &str) -> Result<String, Box<dyn Error>
     if res.status().is_success() {
         let body = res.text()?;
         let json: serde_json::Value = serde_json::from_str(&body)?;
-        
+
         if let Some(now_playing) = json.get("nowPlaying").and_then(|v| v.as_array()) {
             for game in now_playing {
                 if let Some(id) = game.get("gameId").and_then(|v| v.as_str()) {
@@ -72,10 +82,14 @@ pub fn get_game_fen(game_id: &str, token: &str) -> Result<String, Box<dyn Error>
                 }
             }
         }
-        
+
         Err("Partie ou notation FEN non trouvée dans la réponse".into())
     } else {
-        Err(format!("Erreur lors de la récupération de la position FEN : {:?}", res.text()?).into())
+        Err(format!(
+            "Erreur lors de la récupération de la position FEN : {:?}",
+            res.text()?
+        )
+        .into())
     }
 }
 
@@ -133,6 +147,10 @@ pub fn get_bot_color(game_id: &str, token: &str) -> Result<Option<Color>, Box<dy
         }
         Ok(None)
     } else {
-        Err(format!("Erreur lors de la récupération de la couleur : {:?}", res.text()?).into())
+        Err(format!(
+            "Erreur lors de la récupération de la couleur : {:?}",
+            res.text()?
+        )
+        .into())
     }
 }

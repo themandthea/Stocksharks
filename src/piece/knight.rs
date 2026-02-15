@@ -1,5 +1,5 @@
 use crate::board_utils::chessboard::{Board, ChessBoard};
-use crate::{Coordinate, Piece, Square};
+use crate::utils::{Coordinate, Piece, Square};
 pub trait Knight {
     fn knight_move(&self, square: &Square) -> Vec<Square>;
 }
@@ -24,7 +24,6 @@ impl Knight for Board {
                 let new_line = square.get_line().unwrap() as i8 + dx;
                 let new_column = square.get_column().unwrap() as i8 + dy;
                 if !(0..=7).contains(&new_line) || !(0..=7).contains(&new_column) {
-
                     continue; // Skip out of bounds
                 }
                 let new_coordinate = Coordinate::new(
@@ -44,11 +43,9 @@ impl Knight for Board {
 
             // Filtrer les mouvements qui mettent le roi en échec
             let from_coord = square.coordinate;
-            
-            moves.retain(|move_square| {
-                self.is_move_safe(from_coord, move_square.coordinate)
-            });
-            
+
+            moves.retain(|move_square| self.is_move_safe(from_coord, move_square.coordinate));
+
             moves
         } else {
             vec![]

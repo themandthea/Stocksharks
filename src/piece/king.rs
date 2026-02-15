@@ -1,6 +1,5 @@
 use crate::board_utils::chessboard::{Board, ChessBoard};
-use crate::utils::{Coordinate, Color, Piece, Square};
-
+use crate::utils::{Color, Coordinate, Piece, Square};
 
 pub trait King {
     fn king_move(&self, square: &Square) -> Vec<Square>;
@@ -53,11 +52,12 @@ impl King for Board {
                 let c1 = Coordinate::new(2, 0);
                 let b1 = Coordinate::new(1, 0);
                 let a1 = Coordinate::new(0, 0); // Position de la tour pour grand roque
-                
+
                 // Vérifier que les cases entre le roi et la tour sont vides
-                if self.get_square(d1).unwrap().available() &&
-                   self.get_square(c1).unwrap().available() &&
-                   self.get_square(b1).unwrap().available() {
+                if self.get_square(d1).unwrap().available()
+                    && self.get_square(c1).unwrap().available()
+                    && self.get_square(b1).unwrap().available()
+                {
                     // Vérifier que la pièce en a1 est bien une tour blanche
                     if let Some(square) = self.get_square(a1) {
                         if let Some(Piece::Rook(piece_color)) = square.get_piece() {
@@ -65,7 +65,7 @@ impl King for Board {
                                 // Vérifier que le roi ne passe pas par une case en échec
                                 // Pour cela, on simule un déplacement du roi sur les cases
                                 // qu'il va traverser (d1 et c1) et on vérifie s'il est en échec
-                                
+
                                 // Simulation pour d1
                                 let mut temp_board = self.clone();
                                 temp_board.set_piece(e1, None).unwrap();
@@ -86,7 +86,7 @@ impl King for Board {
                     }
                 }
             }
-            
+
             // Long castle (Queen-side) for black
             if self.long_castle.1 && color == &Color::Black && !self.is_in_check(color) {
                 // Vérifier que les cases entre le roi et la tour sont vides
@@ -95,11 +95,12 @@ impl King for Board {
                 let c8 = Coordinate::new(2, 7);
                 let b8 = Coordinate::new(1, 7);
                 let a8 = Coordinate::new(0, 7); // Position de la tour pour grand roque
-                
+
                 // Vérifier que les cases entre le roi et la tour sont vides
-                if self.get_square(d8).unwrap().available() &&
-                   self.get_square(c8).unwrap().available() &&
-                   self.get_square(b8).unwrap().available() {
+                if self.get_square(d8).unwrap().available()
+                    && self.get_square(c8).unwrap().available()
+                    && self.get_square(b8).unwrap().available()
+                {
                     // Vérifier que la pièce en a8 est bien une tour noire
                     if let Some(square) = self.get_square(a8) {
                         if let Some(Piece::Rook(piece_color)) = square.get_piece() {
@@ -125,7 +126,7 @@ impl King for Board {
                     }
                 }
             }
-            
+
             // Short castle (King-side) for white
             if self.short_castle.0 && color == &Color::White && !self.is_in_check(color) {
                 // Vérifier que les cases entre le roi et la tour sont vides
@@ -133,10 +134,11 @@ impl King for Board {
                 let f1 = Coordinate::new(5, 0);
                 let g1 = Coordinate::new(6, 0);
                 let h1 = Coordinate::new(7, 0); // Position de la tour pour petit roque
-                
+
                 // Vérifier que les cases entre le roi et la tour sont vides
-                if self.get_square(f1).unwrap().available() &&
-                   self.get_square(g1).unwrap().available() {
+                if self.get_square(f1).unwrap().available()
+                    && self.get_square(g1).unwrap().available()
+                {
                     // Vérifier que la pièce en h1 est bien une tour blanche
                     if let Some(square) = self.get_square(h1) {
                         if let Some(Piece::Rook(piece_color)) = square.get_piece() {
@@ -162,7 +164,7 @@ impl King for Board {
                     }
                 }
             }
-            
+
             // Short castle (King-side) for black
             if self.short_castle.1 && color == &Color::Black && !self.is_in_check(color) {
                 // Vérifier que les cases entre le roi et la tour sont vides
@@ -170,10 +172,11 @@ impl King for Board {
                 let f8 = Coordinate::new(5, 7);
                 let g8 = Coordinate::new(6, 7);
                 let h8 = Coordinate::new(7, 7); // Position de la tour pour petit roque
-                
+
                 // Vérifier que les cases entre le roi et la tour sont vides
-                if self.get_square(f8).unwrap().available() &&
-                   self.get_square(g8).unwrap().available() {
+                if self.get_square(f8).unwrap().available()
+                    && self.get_square(g8).unwrap().available()
+                {
                     // Vérifier que la pièce en h8 est bien une tour noire
                     if let Some(square) = self.get_square(h8) {
                         if let Some(Piece::Rook(piece_color)) = square.get_piece() {
@@ -202,12 +205,10 @@ impl King for Board {
         }
 
         // Filtrer les mouvements qui mettent le roi en échec
-        if let Some(_) = square.get_piece() {
+        if square.get_piece().is_some() {
             let from_coord = square.coordinate;
-            
-            moves.retain(|move_square| {
-                self.is_move_safe(from_coord, move_square.coordinate)
-            });
+
+            moves.retain(|move_square| self.is_move_safe(from_coord, move_square.coordinate));
         }
         moves
     }
@@ -231,16 +232,24 @@ impl King for Board {
 
                 // Vérifier les attaques de cavalier
                 let knight_moves: [(i8, i8); 8] = [
-                    (1, 2), (2, 1), (2, -1), (1, -2),
-                    (-1, -2), (-2, -1), (-2, 1), (-1, 2)
+                    (1, 2),
+                    (2, 1),
+                    (2, -1),
+                    (1, -2),
+                    (-1, -2),
+                    (-2, -1),
+                    (-2, 1),
+                    (-1, 2),
                 ];
-                
+
                 for &(dx, dy) in &knight_moves {
                     let new_line = king_line as i8 + dx;
                     let new_col = king_col as i8 + dy;
-                    
+
                     if (0..8).contains(&new_line) && (0..8).contains(&new_col) {
-                        if let Some(square) = self.get_square(Coordinate::new(new_col as u8, new_line as u8)) {
+                        if let Some(square) =
+                            self.get_square(Coordinate::new(new_col as u8, new_line as u8))
+                        {
                             if let Some(Piece::Knight(piece_color)) = square.get_piece() {
                                 if piece_color != color {
                                     return true; // En échec par un cavalier
@@ -255,16 +264,19 @@ impl King for Board {
                 for &(dx, dy) in &diagonal_dirs {
                     let mut curr_line = king_line as i8;
                     let mut curr_col = king_col as i8;
-                    
-                    for _ in 0..7 { // Maximum 7 cases dans une direction
+
+                    for _ in 0..7 {
+                        // Maximum 7 cases dans une direction
                         curr_line += dx;
                         curr_col += dy;
-                        
+
                         if !(0..8).contains(&curr_line) || !(0..8).contains(&curr_col) {
                             break; // Hors de l'échiquier
                         }
-                        
-                        if let Some(square) = self.get_square(Coordinate::new(curr_col as u8, curr_line as u8)) {
+
+                        if let Some(square) =
+                            self.get_square(Coordinate::new(curr_col as u8, curr_line as u8))
+                        {
                             if let Some(piece) = square.get_piece() {
                                 if piece.color() != *color {
                                     // Vérifie si c'est un fou ou une dame (qui peuvent attaquer en diagonal)
@@ -286,16 +298,19 @@ impl King for Board {
                 for &(dx, dy) in &straight_dirs {
                     let mut curr_line = king_line as i8;
                     let mut curr_col = king_col as i8;
-                    
-                    for _ in 0..7 { // Maximum 7 cases dans une direction
+
+                    for _ in 0..7 {
+                        // Maximum 7 cases dans une direction
                         curr_line += dx;
                         curr_col += dy;
-                        
+
                         if !(0..8).contains(&curr_line) || !(0..8).contains(&curr_col) {
                             break; // Hors de l'échiquier
                         }
-                        
-                        if let Some(square) = self.get_square(Coordinate::new(curr_col as u8, curr_line as u8)) {
+
+                        if let Some(square) =
+                            self.get_square(Coordinate::new(curr_col as u8, curr_line as u8))
+                        {
                             if let Some(piece) = square.get_piece() {
                                 if piece.color() != *color {
                                     // Vérifie si c'est une tour ou une dame (qui peuvent attaquer en ligne droite)
@@ -318,13 +333,15 @@ impl King for Board {
                 } else {
                     [(1, -1), (-1, -1)] // Directions d'attaque des pions blancs contre le roi noir
                 };
-                
+
                 for &(dx, dy) in &pawn_dirs {
                     let new_line = king_line as i8 + dy;
                     let new_col = king_col as i8 + dx;
-                    
+
                     if (0..8).contains(&new_line) && (0..8).contains(&new_col) {
-                        if let Some(square) = self.get_square(Coordinate::new(new_col as u8, new_line as u8)) {
+                        if let Some(square) =
+                            self.get_square(Coordinate::new(new_col as u8, new_line as u8))
+                        {
                             if let Some(Piece::Pawn(piece_color)) = square.get_piece() {
                                 if piece_color != color {
                                     return true; // En échec par un pion
@@ -336,16 +353,24 @@ impl King for Board {
 
                 // Vérifier les attaques du roi adverse (pour éviter que les rois soient adjacents)
                 let king_moves: [(i8, i8); 8] = [
-                    (1, 1), (0, 1), (1, 0), (-1, -1),
-                    (-1, 1), (1, -1), (0, -1), (-1, 0)
+                    (1, 1),
+                    (0, 1),
+                    (1, 0),
+                    (-1, -1),
+                    (-1, 1),
+                    (1, -1),
+                    (0, -1),
+                    (-1, 0),
                 ];
-                
+
                 for &(dx, dy) in &king_moves {
                     let new_line = king_line as i8 + dy;
                     let new_col = king_col as i8 + dx;
-                    
+
                     if (0..8).contains(&new_line) && (0..8).contains(&new_col) {
-                        if let Some(square) = self.get_square(Coordinate::new(new_col as u8, new_line as u8)) {
+                        if let Some(square) =
+                            self.get_square(Coordinate::new(new_col as u8, new_line as u8))
+                        {
                             if let Some(Piece::King(piece_color)) = square.get_piece() {
                                 if piece_color != color {
                                     return true; // En échec par le roi adverse
@@ -356,7 +381,7 @@ impl King for Board {
                 }
             }
         }
-        
+
         false // Le roi n'est pas en échec
     }
 }

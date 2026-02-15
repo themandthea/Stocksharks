@@ -1,5 +1,5 @@
 use crate::board_utils::chessboard::{Board, ChessBoard};
-use crate::{Coordinate, Piece, Square};
+use crate::utils::{Coordinate, Piece, Square};
 
 pub trait Rook {
     fn rook_move(&self, square: &Square) -> Vec<Square>;
@@ -12,18 +12,14 @@ impl Rook for Board {
             // Check horizontal moves
             for line in (0..square.get_line().unwrap()).rev() {
                 let column = square.get_column().unwrap();
-                if let Some(square) = self.get_square(Coordinate::new(column, line )) {
+                if let Some(square) = self.get_square(Coordinate::new(column, line)) {
                     if square.available() {
-                        let forward_square = Square::new(
-                            Some(Piece::Rook(*color)),
-                            Coordinate::new(column, line ),
-                        ); // 1 square mouv
+                        let forward_square =
+                            Square::new(Some(Piece::Rook(*color)), Coordinate::new(column, line)); // 1 square mouv
                         available_moves.push(forward_square);
                     } else if square.occupied_by_oponent(color) {
-                        let forward_square = Square::new(
-                            Some(Piece::Rook(*color)),
-                            Coordinate::new(column, line ),
-                        ); // 1 square mouv
+                        let forward_square =
+                            Square::new(Some(Piece::Rook(*color)), Coordinate::new(column, line)); // 1 square mouv
                         available_moves.push(forward_square);
                         break;
                     } else {
@@ -75,20 +71,16 @@ impl Rook for Board {
                     }
                 }
             }
-            for column in (0..square.get_column().unwrap()).rev(){
+            for column in (0..square.get_column().unwrap()).rev() {
                 let line = square.get_line().unwrap();
-                if let Some(square) = self.get_square(Coordinate::new(column , line)) {
+                if let Some(square) = self.get_square(Coordinate::new(column, line)) {
                     if square.available() {
-                        let forward_square = Square::new(
-                            Some(Piece::Rook(*color)),
-                            Coordinate::new(column , line),
-                        ); // 1 square mouv
+                        let forward_square =
+                            Square::new(Some(Piece::Rook(*color)), Coordinate::new(column, line)); // 1 square mouv
                         available_moves.push(forward_square);
                     } else if square.occupied_by_oponent(color) {
-                        let forward_square = Square::new(
-                            Some(Piece::Rook(*color)),
-                            Coordinate::new(column , line),
-                        ); // 1 square mouv
+                        let forward_square =
+                            Square::new(Some(Piece::Rook(*color)), Coordinate::new(column, line)); // 1 square mouv
                         available_moves.push(forward_square);
                         break;
                     } else {
@@ -97,16 +89,15 @@ impl Rook for Board {
                 }
             }
         }
-        
+
         // Filtrer les mouvements qui mettent le roi en échec
-        if let Some(_) = square.get_piece() {
+        if square.get_piece().is_some() {
             let from_coord = square.coordinate;
-            
-            available_moves.retain(|move_square| {
-                self.is_move_safe(from_coord, move_square.coordinate)
-            });
+
+            available_moves
+                .retain(|move_square| self.is_move_safe(from_coord, move_square.coordinate));
         }
-        
+
         available_moves
     }
 }

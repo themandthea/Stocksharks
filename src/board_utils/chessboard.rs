@@ -5,18 +5,17 @@ use crate::piece::knight::Knight;
 use crate::piece::pawn::Pawn;
 use crate::piece::queen::Queen;
 use crate::piece::rook::Rook;
-use crate::utils::{Coordinate, Piece, Square, Color};
-
+use crate::utils::{Color, Coordinate, Piece, Square};
 
 pub trait ChessBoard {
     fn new() -> Self;
     fn get_square(&self, coordinate: Coordinate) -> Option<&Square>;
-    fn legal_moves(&self) -> Result<Vec<(Square,Square)>, ()>;
+    fn legal_moves(&self) -> Result<Vec<(Square, Square)>, ()>;
     fn set_piece(&mut self, square: Coordinate, piece: Option<Piece>) -> Result<(), ()>;
     fn empty() -> Self;
-    fn color_to_play(&self) -> Color ;
+    fn color_to_play(&self) -> Color;
 }
-#[derive(Hash, Debug, Clone, PartialEq, Eq,Copy)]
+#[derive(Hash, Debug, Clone, PartialEq, Eq, Copy)]
 pub struct Board {
     pub squares: [Square; 64],
     pub en_passant: Option<Coordinate>, // Position de la case où une capture en passant est possible
@@ -60,7 +59,7 @@ impl ChessBoard for Board {
         Board {
             squares,
             en_passant: None,
-            long_castle: (true, true), // Both white and black can castle
+            long_castle: (true, true),  // Both white and black can castle
             short_castle: (true, true), // Both white and black can castle
             color_to_play: Color::White,
             halfmove_clock: 0,
@@ -115,7 +114,7 @@ impl ChessBoard for Board {
         Board {
             squares,
             en_passant: None,
-            long_castle: (true, true), // Both white and black can castle
+            long_castle: (true, true),  // Both white and black can castle
             short_castle: (true, true), // Both white and black can castle
             color_to_play: Color::White,
             halfmove_clock: 0,
@@ -137,8 +136,7 @@ impl ChessBoard for Board {
         self.squares.get(index)
     }
 
-
-    fn legal_moves(&self) -> Result<Vec<(Square,Square)>, ()> {
+    fn legal_moves(&self) -> Result<Vec<(Square, Square)>, ()> {
         let mut count_piece = 0;
         let mut legal_boards = Vec::new();
         let color_playing = self.color_to_play;
@@ -159,20 +157,19 @@ impl ChessBoard for Board {
                     Piece::Queen(_) => self.queen_moves(square),
                     Piece::King(_) => self.king_move(square),
                 };
-                
+
                 for moves in available_moves {
-                    legal_boards.push((*square,moves));
+                    legal_boards.push((*square, moves));
                 }
             }
         }
         Ok(legal_boards)
-        
     }
 
     fn set_piece(&mut self, square: Coordinate, piece: Option<Piece>) -> Result<(), ()> {
         let index = square.get_index().ok_or(())?;
         if index < self.squares.len() {
-            if piece .is_none() {
+            if piece.is_none() {
                 self.squares[index].set_piece(None);
             } else if let Some(p) = piece {
                 if p.color() == Color::White || p.color() == Color::Black {
@@ -188,14 +185,13 @@ impl ChessBoard for Board {
     }
 }
 
-
 // Méthodes supplémentaires pour Board (pas dans le trait ChessBoard)
 impl Board {
     // Pour la compatibilité avec le code existant
     pub fn print_board(&self) {
         print!("{}", self);
     }
-    
+
     // Implémente un mouvement sur l'échiquier en prenant en compte les règles spéciales
     pub fn implement_move_board(&self, from: Coordinate, to: Coordinate) -> Board {
         let mut temp_board = self.clone();
@@ -203,7 +199,6 @@ impl Board {
             Color::White => Color::Black,
             Color::Black => Color::White,
         };
-
 
         if let Some(from_square) = self.get_square(from) {
             if let Some(piece) = from_square.get_piece() {
@@ -213,12 +208,12 @@ impl Board {
                         Color::White => self.short_castle.0,
                         Color::Black => self.short_castle.1,
                     };
-                    
+
                     let can_castle_long = match *color {
                         Color::White => self.long_castle.0,
                         Color::Black => self.long_castle.1,
                     };
-                    
+
                     // Extraire les coordonnées à partir de la structure Coordinate
                     let (from_file, _) = match from {
                         Coordinate::A(r) => (0, r),
@@ -231,7 +226,7 @@ impl Board {
                         Coordinate::H(r) => (7, r),
                         _ => (0, 0), // Ne devrait pas arriver
                     };
-                    
+
                     let (to_file, _) = match to {
                         Coordinate::A(r) => (0, r),
                         Coordinate::B(r) => (1, r),
@@ -243,7 +238,7 @@ impl Board {
                         Coordinate::H(r) => (7, r),
                         _ => (0, 0), // Ne devrait pas arriver
                     };
-                    
+
                     // Petit roque (O-O)
                     if from_file == 4 && to_file == 6 && can_castle_short {
                         // Déplacer aussi la tour
@@ -255,7 +250,7 @@ impl Board {
                             Color::White => Coordinate::F(0),
                             Color::Black => Coordinate::F(7),
                         };
-                        
+
                         // Déplacer la tour
                         if let Some(rook_square) = self.get_square(rook_from) {
                             if let Some(rook_piece) = rook_square.get_piece() {
@@ -275,7 +270,7 @@ impl Board {
                             Color::White => Coordinate::D(0),
                             Color::Black => Coordinate::D(7),
                         };
-                        
+
                         // Déplacer la tour
                         if let Some(rook_square) = self.get_square(rook_from) {
                             if let Some(rook_piece) = rook_square.get_piece() {
@@ -284,20 +279,20 @@ impl Board {
                             }
                         }
                     }
-                    
+
                     // Désactiver les droits de roque pour le roi qui bouge (dans tous les cas)
                     match *color {
                         Color::White => {
                             temp_board.short_castle.0 = false;
                             temp_board.long_castle.0 = false;
-                        },
+                        }
                         Color::Black => {
                             temp_board.short_castle.1 = false;
                             temp_board.long_castle.1 = false;
-                        },
+                        }
                     }
                 }
-                
+
                 // Gestion de l'en-passant pour les pions
                 if let Piece::Pawn(color) = piece {
                     // Extraire les coordonnées à partir de la structure Coordinate
@@ -312,7 +307,7 @@ impl Board {
                         Coordinate::H(r) => (7, r),
                         _ => (0, 0), // Ne devrait pas arriver
                     };
-                    
+
                     let (to_file, to_rank) = match to {
                         Coordinate::A(r) => (0, r),
                         Coordinate::B(r) => (1, r),
@@ -324,25 +319,27 @@ impl Board {
                         Coordinate::H(r) => (7, r),
                         _ => (0, 0), // Ne devrait pas arriver
                     };
-                    
+
                     // Vérifier si c'est un déplacement de 2 cases (pour définir l'en-passant)
-                    if (*color == Color::White && from_rank == 1 && to_rank == 3) ||
-                       (*color == Color::Black && from_rank == 6 && to_rank == 4) {
+                    if (*color == Color::White && from_rank == 1 && to_rank == 3)
+                        || (*color == Color::Black && from_rank == 6 && to_rank == 4)
+                    {
                         // Définir la case en-passant
                         temp_board.en_passant = Some(Coordinate::new(
                             to_file,
-                            if *color == Color::White { 2 } else { 5 }
+                            if *color == Color::White { 2 } else { 5 },
                         ));
                     } else {
                         // Réinitialiser la case en-passant pour les autres mouvements
-                        
+
                         // Vérifier si c'est une prise en passant seulement si on a une case en-passant
                         if from_file != to_file && // Déplacement diagonal
                            self.en_passant.is_some() && // Une case en-passant est disponible
                            match self.get_square(to) {
                                Some(square) => square.available(), // La case cible est vide
                                None => false,
-                           } {
+                           }
+                        {
                             // Vérifier si la case cible correspond à la coordonnée en-passant
                             let en_passant_coord = self.en_passant.unwrap();
                             let (en_passant_file, _) = match en_passant_coord {
@@ -356,14 +353,14 @@ impl Board {
                                 Coordinate::H(r) => (7, r),
                                 _ => (0, 0),
                             };
-                            
+
                             if to_file == en_passant_file {
                                 // C'est une prise en passant
                                 let captured_pawn_coord = Coordinate::new(to_file, from_rank);
                                 temp_board.set_piece(captured_pawn_coord, None).ok();
                             }
                         }
-                        
+
                         // Réinitialiser la case en-passant après chaque mouvement qui n'est pas un double pas de pion
                         temp_board.en_passant = None;
                     }
@@ -371,7 +368,7 @@ impl Board {
                     // Pour les autres pièces, réinitialiser la case en-passant
                     temp_board.en_passant = None;
                 }
-                
+
                 // Gestion des droits de roque pour les tours
                 if let Piece::Rook(color) = piece {
                     // Vérifier si le roque est encore possible
@@ -379,12 +376,12 @@ impl Board {
                         Color::White => self.short_castle.0,
                         Color::Black => self.short_castle.1,
                     };
-                    
+
                     let can_castle_long = match *color {
                         Color::White => self.long_castle.0,
                         Color::Black => self.long_castle.1,
                     };
-                    
+
                     // Si le roque est encore possible, vérifier si c'est une tour de coin
                     if can_castle_short || can_castle_long {
                         let is_kingside = match from {
@@ -392,13 +389,13 @@ impl Board {
                             Coordinate::H(7) => *color == Color::Black,
                             _ => false,
                         };
-                        
+
                         let is_queenside = match from {
                             Coordinate::A(0) => *color == Color::White,
                             Coordinate::A(7) => *color == Color::Black,
                             _ => false,
                         };
-                        
+
                         if is_kingside && can_castle_short {
                             match *color {
                                 Color::White => temp_board.short_castle.0 = false,
@@ -412,26 +409,25 @@ impl Board {
                         }
                     }
                 }
-                
+
                 // Effectuer le mouvement de base
                 temp_board.set_piece(to, Some(*piece)).ok();
                 temp_board.set_piece(from, None).ok();
             }
         }
-        
+
         temp_board
     }
-    
-    
+
     // Vérifie si un mouvement est sûr pour le roi (ne le met pas en échec)
     pub fn is_move_safe(&self, from: Coordinate, to: Coordinate) -> bool {
         if let Some(from_square) = self.get_square(from) {
             if let Some(piece) = from_square.get_piece() {
                 let color = piece.color();
-                
+
                 // Utiliser la fonction implement_move_board pour simuler le mouvement
                 let temp_board = self.implement_move_board(from, to);
-                
+
                 // Vérifie si le roi est en échec après ce mouvement
                 !temp_board.is_in_check(&color)
             } else {
@@ -441,12 +437,9 @@ impl Board {
             false
         }
     }
-
-
-
 }
 
- // ou le chemin correct vers ton trait Heuristic
+// ou le chemin correct vers ton trait Heuristic
 
 pub fn compare_boards<H: Heuristic>(
     board1: &Board,
@@ -458,17 +451,18 @@ pub fn compare_boards<H: Heuristic>(
     eval1.cmp(&eval2)
 }
 
-pub fn legal_moves_ordered<H : Heuristic>(board  : &Board, heuristic: &H ) -> Vec<(Square,Square,Board)> {
+pub fn legal_moves_ordered<H: Heuristic>(
+    board: &Board,
+    heuristic: &H,
+) -> Vec<(Square, Square, Board)> {
     let mut ordered_boards = Vec::new();
     let mut legal_moves = board.legal_moves().unwrap();
     for (initial_pos, mov) in legal_moves.iter_mut() {
-        let new_board = board.clone().implement_move_board(initial_pos.coordinate, mov.coordinate);
+        let new_board = board
+            .clone()
+            .implement_move_board(initial_pos.coordinate, mov.coordinate);
         ordered_boards.push((initial_pos.clone(), mov.clone(), new_board));
     }
-    ordered_boards.sort_by(|(_, _, a), (_, _, b)| {
-        compare_boards(a, b, heuristic)
-    });
+    ordered_boards.sort_by(|(_, _, a), (_, _, b)| compare_boards(a, b, heuristic));
     ordered_boards
 }
-
-
