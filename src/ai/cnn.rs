@@ -1,10 +1,5 @@
-use crate::{
-    board_utils::chessboard::{Board, ChessBoard},
-    utils::{Color, Piece},
-};
+/* 
 use dfdx::prelude::*;
-use crate::utils::Coordinate;
-
 use dfdx::optim::Adam;
 use dfdx::tensor::{Cpu};
 use std::error::Error;
@@ -269,3 +264,4 @@ pub fn evaluate_board(path: &str, board: &Board) -> Vec<f32>{
     return output.as_vec();
 }
 
+*/

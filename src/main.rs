@@ -1,16 +1,13 @@
 pub mod ai;
 pub mod api;
-pub mod board_utils;
-pub mod piece;
-pub mod utils;
-use crate::ai::alpha_beta;
-use crate::board_utils::chessboard::{Board, ChessBoard};
-use crate::utils::{Coordinate, Piece, Square};
-
+use chess::{Board, ChessMove, MoveGen, Color};
+use serde::de;
+use std::str::FromStr;
 use std::env;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
+use crate::ai::alpha_beta;
 
 fn main() {
     use crate::api::lichess_bot::{
@@ -45,10 +42,10 @@ fn main() {
     // 4. Boucle de jeu
     loop {
         let fen = get_game_fen(&game_id, &token).unwrap();
-        let board = Board::from_fen(&fen).unwrap();
+        let board = Board::from_str(&fen).unwrap();
 
         // Si ce n'est pas à nous de jouer, on attend
-        if board.color_to_play() != my_color {
+        if board.side_to_move() != my_color {
             thread::sleep(Duration::from_secs(1));
             continue;
         }
@@ -56,42 +53,21 @@ fn main() {
         println!("{}", board);
 
         let start = Instant::now();
-
-        let ((init_pos, dest_pos), value) = alpha_beta::alpha_beta_root(&board, 3);
+        let depth = 5; // Profondeur de recherche pour alpha-beta
+        let (mov, value) = alpha_beta::alpha_beta_root(&board,depth);
+        print!("profondeur : {} ", depth);
 
         let duration = start.elapsed();
         println!("Temps d'exécution pour alpha_beta : {:?}", duration);
-
-        let mov = board.get_uci_move(&init_pos, &dest_pos);
+        let mov_str = mov.to_string();
         println!("Coup choisi: {:?} avec une valeur de {:?}", mov, value);
 
-        if let Some(mov) = mov {
-            if let Err(e) = send_move(&game_id, &mov, &token) {
-                eprintln!("Erreur : {}", e);
-            }
-        } else {
-            println!("Aucun coup valide trouvé, partie terminée ?");
-            break;
+        if let Err(e) = send_move(&game_id, &mov_str, &token) {
+            eprintln!("Erreur : {}", e);
         }
 
         thread::sleep(Duration::from_secs(1));
     }
 }
 
-/*
-    let puzzle = "8/8/7K/8/8/5QR1/2k5/8 w - - 0 1".to_string();
-    let mut board = Board::from_fen(&puzzle).unwrap();
-    loop{
 
-    println!("{}",board);
-    thread::sleep(Duration::from_secs(2)); // Attendre 0.5 seconde avant de continuer
-    let ((init_pos,dest_pos), value) = alpha_beta::alpha_beta(&board, 4, Evaluate::MateForBlack(0), Evaluate::MateForWhite(0));
-    println!("Coup choisi: {:?} avec une valeur de {:?}", dest_pos, value);
-    if dest_pos.get_line().is_none() {
-        println!("Pas de coup possible, checkmate ou pat.");
-        break; // On attend le coup de l'adversaire
-    }
-    println!("color to play: {:?}", board.color_to_play());
-    board = board.implement_move_board(init_pos.coordinate(), dest_pos.coordinate());
-    println!("color to play: {:?}", board.color_to_play());
-*/

@@ -1,14 +1,12 @@
 
 pub mod ai;
-pub mod board_utils;
-pub mod piece;
-pub mod utils;
+/* 
 use crate::ai::cnn::train_model;
 use crate::ai::cnn::extract_data;
-use crate::board_utils::chessboard::Board;
 use crate::ai::cnn::evaluate_model;
-
+*/
 pub fn main(){
+    /* 
     
     let data = extract_data(r"C:\Users\mahel\source\repos\Stocksharks\data\lichess_db_puzzle.csv").expect("Failed to extract data");
     println!("Data extracted successfully. Total samples: {}", data.len());
@@ -22,5 +20,6 @@ pub fn main(){
     */
 
     let evaluation = evaluate_model(r"models\trained_on_puzzles.safetensors",&test);
+    */
     
 }

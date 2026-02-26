@@ -1,4 +1,4 @@
-use crate::utils::Color; // Ajoute ce use si ce n'est pas déjà fait
+use chess::Color; // Ajoute ce use si ce n'est pas déjà fait
 use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use std::error::Error;
