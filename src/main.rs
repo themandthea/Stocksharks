@@ -7,7 +7,8 @@ use std::env;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
-use crate::ai::alpha_beta;
+use crate::ai::heuristic::SimpleHeuristic;
+use crate::ai::tree::Node;
 
 fn main() {
     use crate::api::lichess_bot::{
@@ -54,18 +55,26 @@ fn main() {
 
         let start = Instant::now();
         let depth = 5; // Profondeur de recherche pour alpha-beta
-        let (mov, value) = alpha_beta::alpha_beta_root(&board,depth);
+        let root = Node::from(board);
+        let (value,mov) = root.evaluate_path(6,&SimpleHeuristic{});
         print!("profondeur : {} ", depth);
 
         let duration = start.elapsed();
         println!("Temps d'exécution pour alpha_beta : {:?}", duration);
-        let mov_str = mov.to_string();
-        println!("Coup choisi: {:?} avec une valeur de {:?}", mov, value);
+        match mov{
+            Some(mv) => {
+                let mov_str = mv.to_string();
+                println!("Coup choisi: {:?} avec une valeur de {:?}", mv, value);
 
-        if let Err(e) = send_move(&game_id, &mov_str, &token) {
-            eprintln!("Erreur : {}", e);
+                if let Err(e) = send_move(&game_id, &mov_str, &token) {
+                    eprintln!("Erreur : {}", e);
+                }
+            },
+            None => {println!("Aucun coup légal trouvé, partie terminée."); 
+                    continue;
+                    }
         }
-
+        
         thread::sleep(Duration::from_secs(1));
     }
 }

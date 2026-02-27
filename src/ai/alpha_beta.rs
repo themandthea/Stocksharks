@@ -3,25 +3,8 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use crate::ai::heuristic::{Evaluate, Heuristic, SimpleHeuristic};
 
-pub struct Search {
-    pub stack: HashMap<(u8, Board), Evaluate>,
-}
 
-impl Search {
-    pub fn new() -> Self {
-        Search {
-            stack: HashMap::new(),
-        }
-    }
-    pub fn get(&self, depth: u8, key: &Board) -> Option<&Evaluate> {
-        self.stack.get(&(depth, *key))
-    }
 
-    pub fn insert(&mut self, depth: u8, key: Board, value: Evaluate) {
-        self.stack.insert((depth, key), value);
-    }
-
-}
     pub fn alpha_beta( board: &Board, depth: u8, mut alpha: Evaluate, mut beta: Evaluate) -> (ChessMove, Evaluate)  {
         let color = board.side_to_move();
         let maximizing_player= match color{

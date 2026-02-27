@@ -1,6 +1,6 @@
 
 use chess::{Board, Color, Piece};
-use std::cmp::Ordering;
+use std::{cmp::Ordering, ops::Neg};
 //use crate::ai::cnn::evaluate_board;
 
 
@@ -13,6 +13,18 @@ pub enum Evaluate {
     MateForWhite(u8),
     Eval(i32),
     MateForBlack(u8),
+}
+impl Evaluate {
+    pub fn is_mate(&self) -> bool {
+        matches!(self, Evaluate::MateForWhite(_) | Evaluate::MateForBlack(_))
+    }
+    pub fn to_score(&self) -> i32 {
+        match self {
+            Evaluate::MateForWhite(d) => 10000 - (*d as i32), // Plus le nombre de coups pour mater est petit, mieux c'est
+            Evaluate::Eval(v) => *v,
+            Evaluate::MateForBlack(d) => -10000 + (*d as i32), // Plus le nombre de coups pour mater est petit, mieux c'est
+        }
+    }
 }
 
 impl PartialEq for Evaluate {
@@ -47,9 +59,35 @@ impl Ord for Evaluate {
         self.partial_cmp(other).unwrap()
     }
 }
+impl Neg for Evaluate {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Evaluate::MateForWhite(d) => Evaluate::MateForBlack(d),
+            Evaluate::Eval(v) => Evaluate::Eval(-v),
+            Evaluate::MateForBlack(d) => Evaluate::MateForWhite(d),
+        }
+    }
+}
+
 pub struct SimpleHeuristic {}
 impl Heuristic for SimpleHeuristic {
     fn evaluate(&self, board: &Board) -> Evaluate {
+
+        match board.status() {
+            chess::BoardStatus::Checkmate => {
+                return if board.side_to_move() == Color::White {
+                    Evaluate::MateForBlack(0)
+                } else {
+                    Evaluate::MateForWhite(0)
+                }
+            }
+            chess::BoardStatus::Stalemate => {
+                return Evaluate::Eval(0);
+            }
+            _ => {}
+        }
         let mut score = 0;
 
         let pieces = [Piece::Pawn, Piece::Knight, Piece::Bishop, Piece::Rook, Piece::Queen, Piece::King];
