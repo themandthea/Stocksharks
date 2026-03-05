@@ -1,6 +1,6 @@
 use chess::{Board, MoveGen,ChessMove};
 use chess::BoardStatus;
-use crate::ai::heuristic::{self, Evaluate, SimpleHeuristic};
+use crate::ai::heuristic::{self, Evaluate, SimpleHeuristic, HeuristicForBlack};
 
 #[derive(Debug, Clone, Default)]
 pub struct Node {
@@ -74,11 +74,14 @@ impl Node {
     pub fn evaluate_path<H: heuristic::Heuristic>(
         &self, depth: u32, h: &H
     ) -> (Evaluate, Option<ChessMove>) {
-        if self.board.side_to_move() == chess::Color::White {
-            return alpha_beta(&self.board, depth, i32::MIN+1, i32::MAX-1, h);
-        }
-        else {
-            return alpha_beta(&self.board, depth, i32::MAX-1, i32::MIN+1, h);
+        if (self.board.side_to_move() == chess::Color::White) {
+            print!("let evaluate for white : ");
+            alpha_beta(&self.board, depth, Evaluate::MateForBlack(1), Evaluate::MateForWhite(1), h)
+
+        } else {
+            print!("let evaluate for black : ");
+            alpha_beta(&self.board, depth, Evaluate::MateForBlack(1), Evaluate::MateForWhite(1), &HeuristicForBlack{})
+
         }
     }
 }
@@ -87,29 +90,36 @@ impl Node {
 pub fn alpha_beta<H: heuristic::Heuristic>(
     board: &Board,
     depth: u32,
-    alpha: i32,
-    beta: i32,
+    alpha: Evaluate,
+    beta: Evaluate,
     h: &H,
 ) -> (Evaluate, Option<ChessMove>) {
     if depth == 0 || board.status() != BoardStatus::Ongoing {
-        println!("Evaluating board at depth : {} with player : {:?}", depth,board.side_to_move());
         return (h.evaluate(board), None);
     }
 
     let mut a = alpha;
     let mut best_move = None;
     for mv in MoveGen::new_legal(board) {
-        println!("Depth: {}, Move: {}", depth, mv);
         let next = board.make_move_new(mv);
-        let (score,_) = alpha_beta(&next, depth - 1, -beta, -a, h);
-        println!("Score for move {}: {:?}", mv, score);
-        let score = -score;
-        if a < score.to_score() {
+        let (mut score,_) = alpha_beta(&next, depth - 1, -beta, -a, h);
+        match score {
+            Evaluate::MateForWhite(d) => {
+                score = Evaluate::MateForWhite(d + 1);
+            }
+            Evaluate::MateForBlack(d) => {
+                score = Evaluate::MateForBlack(d + 1);
+            }
+            _ => {}
+        }
+        score = -score;
+        if a < score {
              best_move = Some(mv);
-             a = score.to_score();
+             a = score;
         }
         
-        if a >= beta { break; }      // coup d’arrêt : coupure β
+        if a >= beta { //println!("Pruning at depth {:?} with alpha {:?} beta {:?}", depth, &a, beta);
+            break; }      
     }
-    (Evaluate::Eval(a),best_move)
+    (a,best_move)
 }

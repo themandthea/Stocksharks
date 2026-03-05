@@ -54,9 +54,9 @@ fn main() {
         println!("{}", board);
 
         let start = Instant::now();
-        let depth = 5; // Profondeur de recherche pour alpha-beta
+        let depth = 7; // Profondeur de recherche pour alpha-beta
         let root = Node::from(board);
-        let (value,mov) = root.evaluate_path(6,&SimpleHeuristic{});
+        let (value,mov) = root.evaluate_path(depth,&SimpleHeuristic{});
         print!("profondeur : {} ", depth);
 
         let duration = start.elapsed();
@@ -65,6 +65,7 @@ fn main() {
             Some(mv) => {
                 let mov_str = mv.to_string();
                 println!("Coup choisi: {:?} avec une valeur de {:?}", mv, value);
+                println!("Envoi du coup {} ", &mov_str);
 
                 if let Err(e) = send_move(&game_id, &mov_str, &token) {
                     eprintln!("Erreur : {}", e);

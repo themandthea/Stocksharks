@@ -113,6 +113,14 @@ impl Heuristic for SimpleHeuristic {
     }
 }
 
+pub struct HeuristicForBlack {}
+impl Heuristic for HeuristicForBlack {
+    fn evaluate(&self, board: &Board) -> Evaluate {
+        let simple_heuristic = SimpleHeuristic {};
+        -simple_heuristic.evaluate(board)
+    }
+}
+
 pub struct Ai_evaluator {
     model_path: String,
 } impl Ai_evaluator {
